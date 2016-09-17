@@ -1,4 +1,5 @@
 <?php
+
 return [
     'language' => 'en-US',
     'vendorPath' => dirname(dirname(__DIR__)) . '/vendor',
@@ -12,7 +13,7 @@ return [
         ],
         'urlManager' => [
             'class' => 'yii\web\UrlManager',
-            // Disable index.php
+            // Disable upload.php
             'showScriptName' => false,
             // Disable r= routes
             'enablePrettyUrl' => true,

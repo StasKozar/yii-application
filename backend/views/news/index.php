@@ -30,9 +30,21 @@ $this->params['breadcrumbs'][] = $this->title;
             'description:ntext',
             'author',
             'created_at',
+            [
+                'label' => 'Картинка',
+                'format' => 'raw',
+                'value' => function($data){
+                    return Html::img(Yii::getAlias('@root').$data->image,[
+                        'alt'=>'yii2 - картинка в gridview',
+                        'style' => 'height:25px,width:50px;'
+                    ]);
+                },
+            ],
             // 'updated_at',
 
+
             ['class' => 'yii\grid\ActionColumn'],
+
         ],
     ]); ?>
 </div>

@@ -1,6 +1,8 @@
 RewriteEngine on
+RewriteCond %{REQUEST_URI} /(uploads)
+RewriteRule ^uploads/(.*)$ uploads/$1 [L]
 # If a directory or a file exists, use it directly
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-# Otherwise forward it to index.php
+# Otherwise forward it to upload.php
 RewriteRule . index.php

@@ -3,6 +3,8 @@
 namespace common\models;
 
 use Yii;
+use yii\base\Model;
+use yii\web\UploadedFile;
 
 /**
  * This is the model class for table "news".
@@ -17,6 +19,8 @@ use Yii;
  */
 class News extends \yii\db\ActiveRecord
 {
+
+    public $image;
     /**
      * @inheritdoc
      */
@@ -35,6 +39,7 @@ class News extends \yii\db\ActiveRecord
             [['description'], 'string'],
             [['created_at', 'updated_at'], 'safe'],
             [['article', 'intro_text', 'author'], 'string', 'max' => 255],
+            [['image'], 'image', 'skipOnEmpty' => true, 'extensions' => 'png, jpg'],
         ];
     }
 
@@ -49,6 +54,7 @@ class News extends \yii\db\ActiveRecord
             'intro_text' => 'Intro Text',
             'description' => 'Description',
             'author' => 'Author',
+            'image' => 'Image',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
         ];

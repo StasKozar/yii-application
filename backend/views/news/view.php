@@ -35,7 +35,14 @@ $this->params['breadcrumbs'][] = $this->title;
             'author',
             'created_at',
             'updated_at',
+            [
+                'attribute'=>'image',
+                'label'=> 'News Picture',
+                'value'=> '../../../uploads/' . $model->image,
+                'format'=>['image',['width'=>100, 'height'=>100]]
+            ],
         ],
+
     ]) ?>
 
 </div>
