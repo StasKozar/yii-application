@@ -34,10 +34,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 'label' => 'Картинка',
                 'format' => 'raw',
                 'value' => function($data){
-                    return Html::img(Yii::getAlias('@root').$data->image,[
-                        'alt'=>'yii2 - картинка в gridview',
-                        'style' => 'height:25px,width:50px;'
-                    ]);
+                    return Html::img('../../../uploads/' . $data['image'],
+                        ['width' => '70px']);
                 },
             ],
             // 'updated_at',

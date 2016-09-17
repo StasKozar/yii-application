@@ -20,7 +20,6 @@ use yii\web\UploadedFile;
 class News extends \yii\db\ActiveRecord
 {
 
-    public $image;
     /**
      * @inheritdoc
      */
