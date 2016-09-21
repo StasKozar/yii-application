@@ -7,7 +7,7 @@ use yii\widgets\DetailView;
 /* @var $model common\models\News */
 
 $this->title = $model->id;
-$this->params['breadcrumbs'][] = ['label' => 'News', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => Yii::t('app', 'News'), 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="news-view">
@@ -18,13 +18,30 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
-            'id',
+            //'id',
+            [
+                'attribute'=>'image',
+                'label'=> Yii::t('app', 'Image'),
+                'value'=> '/uploads'. DS . $model->image,
+                'format'=>['image',['width'=>100, 'height'=>100]]
+            ],
             'article',
             'intro_text',
             'description:ntext',
             'author',
-            'created_at',
-            'updated_at',
+            [
+                'attribute' => 'created_at',
+                'format' => 'html',
+                'label' => Yii::t('app', 'Created At'),
+                'value' => Yii::$app->formatter->asDate($model['created_at']),
+            ],
+            [
+                'attribute' => 'updated_at',
+                'format' => 'html',
+                'label' => Yii::t('app', 'Updated At'),
+                'value' => Yii::$app->formatter->asDate($model['updated_at']),
+            ],
+
         ],
     ]) ?>
 

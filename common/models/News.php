@@ -3,8 +3,7 @@
 namespace common\models;
 
 use Yii;
-use yii\base\Model;
-use yii\web\UploadedFile;
+use yii\db\ActiveRecord;
 
 /**
  * This is the model class for table "news".
@@ -14,12 +13,12 @@ use yii\web\UploadedFile;
  * @property string $intro_text
  * @property string $description
  * @property string $author
+ * @property string $image
  * @property string $created_at
  * @property string $updated_at
  */
-class News extends \yii\db\ActiveRecord
+class News extends ActiveRecord
 {
-
     /**
      * @inheritdoc
      */
@@ -37,8 +36,10 @@ class News extends \yii\db\ActiveRecord
             [['article', 'intro_text', 'description', 'author'], 'required'],
             [['description'], 'string'],
             [['created_at', 'updated_at'], 'safe'],
-            [['article', 'intro_text', 'author'], 'string', 'max' => 255],
-            [['image'], 'image', 'skipOnEmpty' => true, 'extensions' => 'png, jpg'],
+            [['article', 'intro_text', 'author', 'image'], 'string', 'max' => 255],
+            ['image', 'image',
+                'skipOnEmpty' => true,
+                'extensions' => 'jpg, gif, png, jpeg'],
         ];
     }
 
@@ -49,13 +50,13 @@ class News extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'article' => 'Article',
-            'intro_text' => 'Intro Text',
-            'description' => 'Description',
-            'author' => 'Author',
-            'image' => 'Image',
-            'created_at' => 'Created At',
-            'updated_at' => 'Updated At',
+            'article' => Yii::t('app', 'Article'),
+            'intro_text' => Yii::t('app', 'Intro Text'),
+            'description' => Yii::t('app', 'Description'),
+            'author' => Yii::t('app', 'Author'),
+            'image' => Yii::t('app', 'Image'),
+            'created_at' => Yii::t('app', 'Created At'),
+            'updated_at' => Yii::t('app', 'Updated At'),
         ];
     }
 }

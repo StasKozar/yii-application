@@ -5,7 +5,8 @@ namespace backend\controllers;
 use Yii;
 use common\models\News;
 use common\models\NewsSearch;
-use common\models\UploadForm;
+use yii\behaviors\TimestampBehavior;
+use yii\db\ActiveRecord;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -28,6 +29,16 @@ class NewsController extends Controller
                     'delete' => ['POST'],
                 ],
             ],
+            'timestamp' => [
+                'class' => TimestampBehavior::className(),
+                'attributes' => [
+                    ActiveRecord::EVENT_BEFORE_INSERT => ['created_at', 'updated_at'],
+                    ActiveRecord::EVENT_BEFORE_UPDATE => 'updated_at',
+                ],
+                'value' => function() {
+                    return date('dd/MM/yyyy H:i:s');
+                }
+            ]
         ];
     }
 
@@ -66,16 +77,22 @@ class NewsController extends Controller
     public function actionCreate()
     {
         $model = new News();
-
         if ($model->load(Yii::$app->request->post())) {
-            $file = \yii\web\UploadedFile::getInstance($model, 'image');
-            if (!empty($file))
-                $model->image = $file;
+            $file = UploadedFile::getInstance($model, 'image');
+            if(!empty($file))
+            {
+                $i = 0;
+                while(file_exists(Yii::getAlias('@uploads') . DS . $model->image))
+                {
+                    $model->image = $file->baseName .'_'.$i.'.'.$file->extension;
+                    $i++;
+                }
+            }
 
             if($model->save())
             {
                 if (!empty($file))
-                    $file->saveAs( Yii::getAlias('@root').'/uploads/' . $file);
+                    $file->saveAs(Yii::getAlias('@uploads') . DS . $model->image);
 
                 return $this->redirect(['view', 'id' => $model->id]);
             }
@@ -84,18 +101,6 @@ class NewsController extends Controller
             return $this->render('create', ['model' => $model]);
         }
     }
-    /*public function actionCreate()
-    {
-        $model = new News();
-
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
-        } else {
-            return $this->render('create', [
-                'model' => $model,
-            ]);
-        }
-    }*/
 
     /**
      * Updates an existing News model.
@@ -106,13 +111,32 @@ class NewsController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        if ($model->load(Yii::$app->request->post())){
+            $file = UploadedFile::getInstance($model, 'image');
+            if (!empty($file))
+            {
+                unlink(Yii::getAlias('@uploads') . DS . $model->oldAttributes['image']);
+                $i = 0;
+                while(file_exists(Yii::getAlias('@uploads') . DS . $model->image))
+                {
+                    $model->image = $file->baseName .'_'.$i.'.'.$file->extension;
+                    $i++;
+                }
 
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+            }
+            else{
+                $model->image = $model->oldAttributes['image'];
+            }
+            if($model->save())
+            {
+                if (!empty($file))
+                    $file->saveAs(Yii::getAlias('@uploads') . DS . $model->image);
+
+                return $this->redirect(['view', 'id' => $model->id]);
+            }
+            return $this->render('update', ['model' => $model]);
         } else {
-            return $this->render('update', [
-                'model' => $model,
-            ]);
+            return $this->render('update', ['model' => $model]);
         }
     }
 
@@ -124,8 +148,10 @@ class NewsController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
-
+        $model = $this->findModel($id);
+        if(file_exists(Yii::getAlias('@uploads') . DS . $model->image) && $model->image !== null)
+            unlink(Yii::getAlias('@uploads') . DS . $model->image);
+        $model->delete();
         return $this->redirect(['index']);
     }
 
@@ -143,20 +169,5 @@ class NewsController extends Controller
         } else {
             throw new NotFoundHttpException('The requested page does not exist.');
         }
-    }
-
-    public function actionUpload()
-    {
-        $model = new UploadForm();
-
-        if (Yii::$app->request->isPost) {
-            $model->imageFile = UploadedFile::getInstance($model, 'imageFile');
-            if ($model->upload()) {
-                // file is uploaded successfully
-                return 'file uploaded';
-            }
-        }
-
-        return $this->render('uploads', ['model' => $model]);
     }
 }
