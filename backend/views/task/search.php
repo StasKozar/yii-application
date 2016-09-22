@@ -46,6 +46,19 @@ $this->params['breadcrumbs'][] = $this->title;
                 echo 'to: '.$value.'<br>';
             }
         }*/
+        echo "<table border='1px'>";
+        foreach ($notAvailable as $key => $value)
+        {
+            if($key%2 == 0)
+            {
+                echo "<tr><td>$value</td>";
+            }
+            else
+            {
+                echo "<td>$value</td></tr>";
+            }
+        }
+        echo "</table>";
     }
 
     ?>

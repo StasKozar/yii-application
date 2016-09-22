@@ -79,9 +79,9 @@ class TaskController extends Controller
             $busy = $result['busyTime'];
             $notAvailable = $result['notAvailableTime'];
 
-            /*var_dump(true);
+            var_dump(true);
             var_dump($result);
-            die();*/
+            die();
 
             return $this->render('search', [
                 'model' => $model,
