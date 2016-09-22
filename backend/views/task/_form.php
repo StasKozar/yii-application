@@ -14,19 +14,19 @@ use kartik\datetime\DateTimePicker;
     <?php $form = ActiveForm::begin(); ?>
 
     <?= $form->field($model, 'begin')->widget(DateTimePicker::className(), [
-        'options' => ['placeholder' => 'Select operating time ...'],
+        'options' => ['placeholder' => 'Select time'],
         'convertFormat' => true,
         'pluginOptions' => [
-            'format' => 'yyyy-MM-dd H:i:s',
+            'format' => 'yyyy-MM-dd H:i',
             'todayHighlight' => true
             ]
     ]);?>
 
     <?= $form->field($model, 'end')->widget(DateTimePicker::className(), [
-        'options' => ['placeholder' => 'Select operating time ...'],
+        'options' => ['placeholder' => 'Select time'],
         'convertFormat' => true,
         'pluginOptions' => [
-            'format' => 'yyyy-MM-dd H:i:s',
+            'format' => 'yyyy-MM-dd H:i',
             'todayHighlight' => true
         ]
     ])?>

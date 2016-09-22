@@ -33,4 +33,50 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 
     <?php ActiveForm::end(); ?>
+
+    <?php
+    echo '<h2>Free time</h2>';
+    if($free != null){
+        /*foreach ($free as $key => $value)
+        {
+            if($key%2 == 0)
+            {
+                echo 'from: '.$value.' - ';
+            }else{
+                echo 'to: '.$value.'<br>';
+            }
+        }*/
+    }
+
+    ?>
 </div>
+
+
+<!--foreach ($period as $key => $value)
+{
+if(in_array($value[0]->format('Y-m-d'), $testPeriod))
+{
+for($i = 0; $i < count($workPeriod); $i++)
+{
+if ($value[0]->format('Y-m-d H:i') == $workPeriod[$i]['begin']->format('Y-m-d H:i')) {
+$freePeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i');
+$freePeriod[] = $value[1]->format('Y-m-d H:i');
+
+} elseif ($value[1]->format('Y-m-d H:i') == $workPeriod[$i]['end']->format('Y-m-d H:i')) {
+$freePeriod[] = $value[0]->format('Y-m-d H:i');
+$freePeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i');
+
+} elseif ($value[0]->format('Y-m-d H:i') == $workPeriod[$i]['begin']->format('Y-m-d H:i')
+&& $value[1]->format('Y-m-d H:i') == $workPeriod[$i]['end']->format('Y-m-d H:i')
+) {
+continue;
+} else {
+$freePeriod[] = $value[0]->format('Y-m-d H:i');
+$freePeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i');
+$freePeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i');
+$freePeriod[] = $value[1]->format('Y-m-d H:i');
+
+}
+}
+}
+}-->

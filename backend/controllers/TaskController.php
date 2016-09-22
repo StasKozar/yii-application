@@ -69,39 +69,35 @@ class TaskController extends Controller
     public function actionSearch()
     {
         $model = new Task();
-        $formatter = Yii::$app->formatter;
-        $tasks = Task::find()->all();
-        if ($model->load(Yii::$app->request->post())){
-            $begin =  new \DateTime($model->begin);
-            $end = new \DateTime($model->end);
-            $workTime = Task::getWorkTime();
-            $workBegin = date('H',$workTime['begin']);
-            $workEnd = date('H',$workTime['end']);
-            $workDays = Task::getWorkDays();
-            if (in_array(date_format($begin, 'w'), $workDays)
-                || in_array(date_format($end, 'w'), $workDays))
-            {
-                $hours = [];
-                $minutes = [];
-                for($i = (int)$workBegin; $i <= $workEnd; $i++)
-                {
-                    $hours[] = $i;
-                }
-                for($i = 0; $i < 60; $i++)
-                {
-                    $minutes[] = $i;
-                }
+        $free = null;
+        $busy = null;
+        $notAvailable = null;
+        if($model->load(Yii::$app->request->post()))
+        {
+            $result = $model->getTime();
+            $free = $result['freeTime'];
+            $busy = $result['busyTime'];
+            $notAvailable = $result['notAvailableTime'];
 
-                die();
-            }
+            /*var_dump(true);
+            var_dump($result);
+            die();*/
 
             return $this->render('search', [
-                'model' => $model,]);
+                'model' => $model,
+                'free' => $free,
+                'busy' => $busy,
+                'notAvailable' => $notAvailable,
+            ]);
         }
         else
         {
             return $this->render('search', [
-                'model' => $model,]);
+                'model' => $model,
+                'free' => $free,
+                'busy' => $busy,
+                'notAvailable' => $notAvailable,
+            ]);
         }
     }
 
@@ -131,8 +127,8 @@ class TaskController extends Controller
             if (in_array(date_format($task_begin, 'w'), $workDays)
                 && in_array(date_format($task_end, 'w'), $workDays)
             ) {
-                if (date('H:i:s', $workTime['begin']) <= date_format($task_begin, 'H:i:s')
-                    && date('H:i:s', $workTime['end']) >= date_format($task_end, 'H:i:s')
+                if (date('H:i', $workTime['begin']) <= date_format($task_begin, 'H:i')
+                    && date('H:i', $workTime['end']) >= date_format($task_end, 'H:i')
                 ) {
                     if($tasks === null)
                     {
