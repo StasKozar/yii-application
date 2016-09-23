@@ -36,8 +36,14 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <?php
     echo '<h2>Free time</h2>';
-    if($free != null){
-        /*foreach ($free as $key => $value)
+
+    var_dump(1);
+    var_dump($free);
+    var_dump($busy);
+    var_dump($notAvailable);
+
+    /*if($free != null){
+        foreach ($free as $key => $value)
         {
             if($key%2 == 0)
             {
@@ -45,51 +51,8 @@ $this->params['breadcrumbs'][] = $this->title;
             }else{
                 echo 'to: '.$value.'<br>';
             }
-        }*/
-        echo "<table border='1px'>";
-        foreach ($notAvailable as $key => $value)
-        {
-            if($key%2 == 0)
-            {
-                echo "<tr><td>$value</td>";
-            }
-            else
-            {
-                echo "<td>$value</td></tr>";
-            }
         }
-        echo "</table>";
-    }
+    }*/
 
     ?>
 </div>
-
-
-<!--foreach ($period as $key => $value)
-{
-if(in_array($value[0]->format('Y-m-d'), $testPeriod))
-{
-for($i = 0; $i < count($workPeriod); $i++)
-{
-if ($value[0]->format('Y-m-d H:i') == $workPeriod[$i]['begin']->format('Y-m-d H:i')) {
-$freePeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i');
-$freePeriod[] = $value[1]->format('Y-m-d H:i');
-
-} elseif ($value[1]->format('Y-m-d H:i') == $workPeriod[$i]['end']->format('Y-m-d H:i')) {
-$freePeriod[] = $value[0]->format('Y-m-d H:i');
-$freePeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i');
-
-} elseif ($value[0]->format('Y-m-d H:i') == $workPeriod[$i]['begin']->format('Y-m-d H:i')
-&& $value[1]->format('Y-m-d H:i') == $workPeriod[$i]['end']->format('Y-m-d H:i')
-) {
-continue;
-} else {
-$freePeriod[] = $value[0]->format('Y-m-d H:i');
-$freePeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i');
-$freePeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i');
-$freePeriod[] = $value[1]->format('Y-m-d H:i');
-
-}
-}
-}
-}-->

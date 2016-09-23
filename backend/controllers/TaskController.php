@@ -79,10 +79,6 @@ class TaskController extends Controller
             $busy = $result['busyTime'];
             $notAvailable = $result['notAvailableTime'];
 
-            var_dump(true);
-            var_dump($result);
-            die();
-
             return $this->render('search', [
                 'model' => $model,
                 'free' => $free,
@@ -106,83 +102,33 @@ class TaskController extends Controller
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return mixed
      */
+
     public function actionCreate()
     {
         $model = new Task();
-        $tasks = Task::find()->all();
 
         if ($model->load(Yii::$app->request->post())) {
-            $task_begin = new \DateTime($model->begin);
-            $task_end = new \DateTime($model->end);
-            $workTime = Task::getWorkTime();
-            $workDays = Task::getWorkDays();
-
-            if($task_begin >= $task_end){
+            $result = $model->validateDate();
+            if (!empty($result['message'])){
                 return $this->render('create', [
                     'model' => $model,
-                    'message' => 'Date of begin can\'t be bigger or equal then date of end ',
+                    'message' => $result['message'],
                 ]);
             }
-
-            if (in_array(date_format($task_begin, 'w'), $workDays)
-                && in_array(date_format($task_end, 'w'), $workDays)
-            ) {
-                if (date('H:i', $workTime['begin']) <= date_format($task_begin, 'H:i')
-                    && date('H:i', $workTime['end']) >= date_format($task_end, 'H:i')
-                ) {
-                    if($tasks === null)
-                    {
-                        $model->name = 'task1';
-                        $model->save();
-
-                        return $this->redirect(['view', 'id' => $model->id]);
-                    }
-                    $temp_begin = '';
-                    $temp_end = '';
-                    foreach ($tasks as $key => $value) {
-                        $value_begin = new \DateTime($value->attributes['begin']);
-                        $value_end = new \DateTime($value->attributes['end']);
-
-                        if (($value_begin > $task_begin || $value_end < $task_begin)
-                            && ($value_begin > $task_end || $value_end < $task_end)
-                            && !($task_begin < $value_begin && $value_end < $task_end)
-                        ) {
-                            $temp_begin = (array)$task_begin;
-                            $temp_end = (array)$task_end;
-
-                        } else {
-                            return $this->render('create', [
-                                'model' => $model,
-                                'message' => 'Please choose another datetime!',
-                            ]);
-                        }
-                    }
-
-                    $i = 1;
-                    while (true) {
-                        $task = 'task' . $i;
-                        if (!array_key_exists($task, $tasks)/*$key !== $task*/) {
-                            $model->begin = $temp_begin['date'];
-                            $model->end = $temp_end['date'];
-                            $model->name = $task;
-                            if($model->save()){
-                                return $this->redirect(['view', 'id' => $model->id]);
-                            };
-                        }
-                        $i++;
-                    }
-                } else {
-                    return $this->render('create', [
-                        'model' => $model,
-                        'message' => 'Please choose another datetime!',
-                    ]);
-                }
-            } else {
-                return $this->render('create', [
-                    'model' => $model,
-                    'message' => 'Please choose another datetime!',
-                ]);
+            if (!empty($result['begin']))
+                $model->begin = $result['begin'];
+            if (!empty($result['end']))
+                $model->end = $result['end'];
+            $i = 1;
+            while (true) {
+                $task = 'task' . $i;
+                $model->name = $task;
+                if ($model->save()) {
+                    return $this->redirect(['view', 'id' => $model->id]);
+                };
+                $i++;
             }
+
         } else {
             return $this->render('create', [
                 'model' => $model,
