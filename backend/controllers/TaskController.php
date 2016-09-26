@@ -69,20 +69,16 @@ class TaskController extends Controller
     public function actionSearch()
     {
         $model = new Task();
-        $free = null;
-        $busy = null;
+        $time = null;
         $notAvailable = null;
         if($model->load(Yii::$app->request->post()))
         {
             $result = $model->getTime();
-            $free = $result['freeTime'];
-            $busy = $result['busyTime'];
-            $notAvailable = $result['notAvailableTime'];
-
+            $time = $result['time'];
+            $notAvailable = $result['period'];
             return $this->render('search', [
                 'model' => $model,
-                'free' => $free,
-                'busy' => $busy,
+                'time' => $time,
                 'notAvailable' => $notAvailable,
             ]);
         }
@@ -90,8 +86,7 @@ class TaskController extends Controller
         {
             return $this->render('search', [
                 'model' => $model,
-                'free' => $free,
-                'busy' => $busy,
+                'result' => $time,
                 'notAvailable' => $notAvailable,
             ]);
         }

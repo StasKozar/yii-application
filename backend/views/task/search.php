@@ -35,24 +35,30 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php ActiveForm::end(); ?>
 
     <?php
-    echo '<h2>Free time</h2>';
 
-    var_dump(1);
-    var_dump($free);
-    var_dump($busy);
-    var_dump($notAvailable);
-
-    /*if($free != null){
-        foreach ($free as $key => $value)
+    if(!empty($time)){
+        echo '<h2>Time Task</h2>';
+        echo "<table border='2px'>";
+        foreach ($notAvailable as $key => $date)
         {
-            if($key%2 == 0)
-            {
-                echo 'from: '.$value.' - ';
-            }else{
-                echo 'to: '.$value.'<br>';
+            echo "<tr>";
+            echo "<td>".$date[0]->format('Y-m-d')."</td>";
+            foreach($time as $value){
+                if($date[0]->format('Y-m-d') == substr($value, 0, -7)){
+                    if(strpos($value, "U") > 0){
+                        echo "<td style='background: grey'>".substr($value, 11, -1)."</td>>";
+                    }
+                    if(strpos($value, "F") > 0){
+                        echo "<td style='background: greenyellow'>".substr($value, 11, -1)."</td>>";
+                    }
+                    if(strpos($value, "B") > 0){
+                        echo "<td style='background: red'>".substr($value, 11, -1)."</td>>";
+                    }
+                }
             }
+            echo "</tr>";
         }
-    }*/
-
+        echo "</table>";
+    }
     ?>
 </div>
