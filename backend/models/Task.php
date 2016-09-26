@@ -81,6 +81,7 @@ class Task extends \yii\db\ActiveRecord
         $result = [];
         $period = [];
         $notAvailablePeriod = [];
+        $taskPeriod = [];
         $workTime = $this::getWorkTime();
         $from = date('H:i', $workTime['begin']);
         $to = date('H:i', $workTime['end']);
@@ -89,6 +90,7 @@ class Task extends \yii\db\ActiveRecord
         foreach ($tasks as $key => $value) {
             $value_begin = new \DateTime($value->attributes['begin']);
             $value_end = new \DateTime($value->attributes['end']);
+            $taskPeriod[] = $value_begin->format('Y-m-d');
 
             $workPeriod[$key]['begin'] = new \DateTime($value_begin->format('Y-m-d H:i'));
             $workPeriod[$key]['end'] = new \DateTime($value_end->format('Y-m-d H:i'));
@@ -141,44 +143,52 @@ class Task extends \yii\db\ActiveRecord
                 }
             }
         }
-        
-        while (list($key, $value) = each($result)){
-            for ($i = 0; $i < count($workPeriod); $i++) {
-                if(strpos($value, $F) > 0)
+
+        while (list($key, $value) = each($result)) {
+            if (strpos($value, $F) > 0) {
+                if (!in_array(substr($value, 0, -7), $taskPeriod))
                 {
+                    $searchPeriod[] = $value;
+                }
+                for ($i = 0; $i < count($workPeriod); $i++) {
                     if (substr($value, 0, -7) == $workPeriod[$i]['begin']->format('Y-m-d')) {
                         if (substr($value, 0, -1) == $workPeriod[$i]['begin']->format('Y-m-d H:i')
-                            && substr($result[$key+1], 0, -1) == $workPeriod[$i]['end']->format('Y-m-d H:i')
+                            && substr($result[$key + 1], 0, -1) == $workPeriod[$i]['end']->format('Y-m-d H:i')
                         ) {
-                            $searchPeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i').$B;
-                            $searchPeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i').$B;
+                            $searchPeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i') . $B;
+                            $searchPeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i') . $B;
                         } elseif (substr($value, 0, -1) == $workPeriod[$i]['end']->format('Y-m-d H:i')
-                            && substr($result[$key-1], 0, -1) == $workPeriod[$i]['begin']->format('Y-m-d H:i')) {
+                            && substr($result[$key - 1], 0, -1) == $workPeriod[$i]['begin']->format('Y-m-d H:i')
+                        ) {
                             continue;
-                        }elseif (substr($value, 0, -1) == $workPeriod[$i]['begin']->format('Y-m-d H:i')) {
-                            $searchPeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i').$B;
-                            $searchPeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i').$B;
-                            $searchPeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i').$F;
+                        } elseif (substr($value, 0, -1) == $workPeriod[$i]['begin']->format('Y-m-d H:i')) {
+                            $searchPeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i') . $B;
+                            $searchPeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i') . $B;
+                            $searchPeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i') . $F;
                         } elseif (substr($value, 0, -1) == $workPeriod[$i]['end']->format('Y-m-d H:i')
-                            && substr($result[$key-1], 0, -1) != $workPeriod[$i]['begin']->format('Y-m-d H:i')) {
-                            $searchPeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i').$F;
-                            $searchPeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i').$B;
-                            $searchPeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i').$B;
-                        } elseif(substr($value, 0, -1) < $workPeriod[$i]['begin']->format('Y-m-d H:i')
-                            && substr($result[$key+1], 0, -1) > $workPeriod[$i]['end']->format('Y-m-d H:i')) {
-                            $searchPeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i').$F;
-                            $searchPeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i').$B;
-                            $searchPeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i').$B;
-                            $searchPeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i').$F;
-                        }else{
+                            && substr($result[$key - 1], 0, -1) != $workPeriod[$i]['begin']->format('Y-m-d H:i')
+                        ) {
+                            $searchPeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i') . $F;
+                            $searchPeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i') . $B;
+                            $searchPeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i') . $B;
+                        } elseif (substr($value, 0, -1) < $workPeriod[$i]['begin']->format('Y-m-d H:i')
+                            && substr($result[$key + 1], 0, -1) > $workPeriod[$i]['end']->format('Y-m-d H:i')
+                        ) {
+                            $searchPeriod[] = $value;
+                            $searchPeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i') . $F;
+                            $searchPeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i') . $B;
+                            $searchPeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i') . $B;
+                            $searchPeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i') . $F;
+                        } else {
                             $searchPeriod[] = $value;
                         }
                     }
-                }else{
-                    $searchPeriod[] = $value;
                 }
+            } else {
+                $searchPeriod[] = $value;
             }
         }
+
 
         $searchPeriod = array_unique($searchPeriod);
         return [
