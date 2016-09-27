@@ -38,12 +38,13 @@ $this->params['breadcrumbs'][] = $this->title;
 
     if(!empty($time)){
         echo '<h2>Time Task</h2>';
-        echo "<table border='2px'>";
+        echo "<table border='2px' style='border-collapse: separate'>";
         foreach ($notAvailable as $key => $date)
         {
             echo "<tr>";
             echo "<td>".$date[0]->format('Y-m-d')."</td>";
-            foreach($time as $value){
+            foreach($time as $value)
+            {
                 if($date[0]->format('Y-m-d') == substr($value, 0, -7)){
                     if(strpos($value, "U") > 0){
                         echo "<td style='background: grey'>".substr($value, 11, -1)."</td>>";

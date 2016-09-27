@@ -2,8 +2,9 @@
 
 namespace backend\models;
 
-use Faker\Provider\cs_CZ\DateTime;
 use Yii;
+use backend\models\Helper;
+
 
 /**
  * This is the model class for table "time_task".
@@ -24,13 +25,13 @@ class Task extends \yii\db\ActiveRecord
     {
         return [
             'begin' => 8 * 60 * 60,
-            'end' => 20 * 60 * 60
+            'end' => 17 * 60 * 60
         ];
     }
 
     public static function getWorkDays()
     {
-        return [0, 1, 2, 3, 4, 5, 6];
+        return [1, 2, 4, 5,];
     }
 
     /**
@@ -71,6 +72,70 @@ class Task extends \yii\db\ActiveRecord
 
     public function getTime()
     {
+        $B = 'Busy';
+        $U = 'Unavailable';
+        $F = 'Free';
+        $result = [];
+        $searchPeriod = [];
+        $model = $this;
+        $tasks = $this::find()->all();
+        $workDays = $this::getWorkDays();
+        $workTime = $this::getWorkTime();
+        $from = date('H:i', $workTime['begin']);
+        $to = date('H:i', $workTime['end']);
+        $begin = new \DateTime($model->begin);
+        $recurrences = $begin->diff(new \DateTime($model->end));
+        $interval = new \DateInterval('P1D');
+        $period = new \DatePeriod($begin, $interval, $recurrences->days);
+
+        $i = 0;
+        foreach ($period as $date)
+        {
+            if (!empty($result)) {
+                $start = $date->format('Y-m-d H:i');
+                $end = $date->format('Y-m-d 23:59');
+                $type = $U;
+                $previous = $result[$i];
+                $result[] = new Helper($start, $end, $type, $previous);
+                $i++;
+            } else {
+                $start = $date->format('Y-m-d H:i');
+                $end = $date->format('Y-m-d 23:59');
+                $type = $U;
+                $result[] = new Helper($start, $end, $type);
+            }
+
+        }
+
+        foreach ($period as $date)
+        {
+            if (in_array($date->format('w'), $workDays))
+            {
+                $start = $date->format('Y-m-d').' '.$from;
+                $end = $date->format('Y-m-d').' '.$to;
+                $type = $F;
+                foreach ($result as $value)
+                {
+                    if (substr($value->begin, 0, -6) == substr($start, 0, -6))
+                    {
+                        $value->end = $start;
+                        $result[] = new Helper($start, $end, $type, $value);
+                    }
+                }
+            }
+
+        }
+        var_dump(1);
+        var_dump($result);
+        die();
+
+        foreach ($tasks as $task){
+
+        }
+    }
+
+    /*public function getTime()
+    {
         $U = 'U';
         $F = 'F';
         $B = 'B';
@@ -96,53 +161,59 @@ class Task extends \yii\db\ActiveRecord
             $workPeriod[$key]['end'] = new \DateTime($value_end->format('Y-m-d H:i'));
         }
 
-        sort($workPeriod);
         $begin = new \DateTime($model->begin);
         $date_diff = $begin->diff(new \DateTime($model->end));
 
         for ($i = 0; $i <= $date_diff->days; $i++) {
             if (in_array($begin->format('w'), $workDays)) {
+                $notAvailablePeriod[$i][] = new \DateTime($begin->format('Y-m-d H:i'));
                 $period[$i][] = new \DateTime($begin->format('Y-m-d') . ' ' . $from);
                 $period[$i][] = new \DateTime($begin->format('Y-m-d') . ' ' . $to);
+                $notAvailablePeriod[$i][] = new \DateTime($begin->format('Y-m-d 23:59'));
+            }else{
+                $notAvailablePeriod[$i][] = new \DateTime($begin->format('Y-m-d H:i'));
+                $notAvailablePeriod[$i][] = new \DateTime($begin->format('Y-m-d 23:59'));
             }
-            $notAvailablePeriod[$i][] = new \DateTime($begin->format('Y-m-d H:i'));
-            $notAvailablePeriod[$i][] = new \DateTime($begin->format('Y-m-d 23:59'));
             $begin->add(new \DateInterval('P1D'));
         }
 
         foreach ($notAvailablePeriod as $key => $value) {
-            if ($value[0]->format('Y-m-d') !== $period[$key][0]->format('Y-m-d')) {
-                $result[] = $value[0]->format('Y-m-d H:i').$U;
-                $result[] = $value[1]->format('Y-m-d H:i').$U;
-            }
             for ($i = 0; $i < count($period); $i++) {
+                if (!isset($period[$i])) {
+                    continue;
+                }
                 if ($value[0]->format('Y-m-d') == $period[$i][0]->format('Y-m-d')) {
                     if ($value[0]->format('Y-m-d H:i') == $period[$i][0]->format('Y-m-d H:i')
                         && $value[1]->format('Y-m-d H:i') == $period[$i][1]->format('Y-m-d H:i')
                     ) {
-                        $result[] = $period[$i][0]->format('Y-m-d H:i').$F;
-                        $result[] = $period[$i][1]->format('Y-m-d H:i').$F;
+                        $result[] = $period[$i][0]->format('Y-m-d H:i') . $F;
+                        $result[] = $period[$i][1]->format('Y-m-d H:i') . $F;
+                        continue;
                     } elseif ($value[0]->format('Y-m-d H:i') == $period[$i][0]->format('Y-m-d H:i')) {
-                        $result[] = $period[$i][0]->format('Y-m-d H:i').$F;
-                        $result[] = $period[$i][1]->format('Y-m-d H:i').$F;
-                        $result[] = $period[$i][1]->format('Y-m-d H:i').$U;
-                        $result[] = $value[1]->format('Y-m-d H:i').$U;
+                        $result[] = $period[$i][0]->format('Y-m-d H:i') . $F;
+                        $result[] = $period[$i][1]->format('Y-m-d H:i') . $F;
+                        $result[] = $period[$i][1]->format('Y-m-d H:i') . $U;
+                        $result[] = $value[1]->format('Y-m-d H:i') . $U;
                     } elseif ($value[1]->format('Y-m-d H:i') == $period[$i][1]->format('Y-m-d H:i')) {
-                        $result[] = $value[0]->format('Y-m-d H:i').$U;
-                        $result[] = $period[$i][0]->format('Y-m-d H:i').$U;
-                        $result[] = $period[$i][0]->format('Y-m-d H:i').$F;
-                        $result[] = $period[$i][1]->format('Y-m-d H:i').$F;
+                        $result[] = $value[0]->format('Y-m-d H:i') . $U;
+                        $result[] = $period[$i][0]->format('Y-m-d H:i') . $U;
+                        $result[] = $period[$i][0]->format('Y-m-d H:i') . $F;
+                        $result[] = $period[$i][1]->format('Y-m-d H:i') . $F;
                     } else {
-                        $result[] = $value[0]->format('Y-m-d H:i').$U;
-                        $result[] = $period[$i][0]->format('Y-m-d H:i').$U;
-                        $result[] = $period[$i][0]->format('Y-m-d H:i').$F;
-                        $result[] = $period[$i][1]->format('Y-m-d H:i').$F;
-                        $result[] = $period[$i][1]->format('Y-m-d H:i').$U;
-                        $result[] = $value[1]->format('Y-m-d H:i').$U;
+                        $result[] = $value[0]->format('Y-m-d H:i') . $U;
+                        $result[] = $period[$i][0]->format('Y-m-d H:i') . $U;
+                        $result[] = $period[$i][0]->format('Y-m-d H:i') . $F;
+                        $result[] = $period[$i][1]->format('Y-m-d H:i') . $F;
+                        $result[] = $period[$i][1]->format('Y-m-d H:i') . $U;
+                        $result[] = $value[1]->format('Y-m-d H:i') . $U;
                     }
+                } else {
+                    $result[] = $value[0]->format('Y-m-d H:i') . $U;
+                    $result[] = $value[1]->format('Y-m-d H:i') . $U;
                 }
             }
         }
+
 
         while (list($key, $value) = each($result)) {
             if (strpos($value, $F) > 0) {
@@ -184,18 +255,18 @@ class Task extends \yii\db\ActiveRecord
                         }
                     }
                 }
-            } else {
-                $searchPeriod[] = $value;
             }
         }
 
 
+
+        sort($searchPeriod);
         $searchPeriod = array_unique($searchPeriod);
         return [
             'time' => $searchPeriod,
             'period' => $notAvailablePeriod,
         ];
-    }
+    }*/
 
     public function validateDate()
     {
@@ -208,18 +279,16 @@ class Task extends \yii\db\ActiveRecord
         $workDays = $this::getWorkDays();
 
         if($task_begin >= $task_end){
-            return [
-                'message' => 'Date of begin can\'t be bigger or equal then date of end ',
-            ];
+            return ['message' => 'Please choose another date'];
         }
 
-        if (in_array(date_format($task_begin, 'w'), $workDays)
+        /*if (in_array(date_format($task_begin, 'w'), $workDays)
             && in_array(date_format($task_end, 'w'), $workDays))
-        {
-            if (date('H:i', $workTime['begin']) <= date_format($task_begin, 'H:i')
+        {*/
+            /*if (date('H:i', $workTime['begin']) <= date_format($task_begin, 'H:i')
                 && date('H:i', $workTime['end']) >= date_format($task_end, 'H:i'))
-            {
-                if ($tasks === null)
+            {*/
+                if (empty($tasks))
                 {
                     $name = 'task1';
 
@@ -231,18 +300,18 @@ class Task extends \yii\db\ActiveRecord
                     $value_begin = new \DateTime($value->attributes['begin']);
                     $value_end = new \DateTime($value->attributes['end']);
 
-                    if (($value_begin > $task_begin || $value_end < $task_begin)
+                    /*if (($value_begin > $task_begin || $value_end < $task_begin)
                         && ($value_begin > $task_end || $value_end < $task_end)
                         && !($task_begin < $value_begin && $value_end < $task_end))
-                    {
+                    {*/
                         $temp_begin = (array)$task_begin;
                         $temp_end = (array)$task_end;
 
-                    } else {
+                    /*} else {
                         return [
                             'message' => 'Please choose another time!',
                         ];
-                    }
+                    }*/
                 }
                 $begin = $temp_begin['date'];
                 $end = $temp_end['date'];
@@ -254,10 +323,10 @@ class Task extends \yii\db\ActiveRecord
                     'name' => $name
                 ];
 
-            }
-            return ['message' => 'Please choose another time!',];
-        }else{
+            /*}
+            return ['message' => 'Please choose another time!',];*/
+        /*}else{
             return ['message' => 'Please choose another date!',];
-        }
+        }*/
     }
 }
