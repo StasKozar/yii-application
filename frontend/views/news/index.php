@@ -7,7 +7,7 @@ use yii\grid\GridView;
 /* @var $searchModel common\models\NewsSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'News';
+$this->title = Yii::t('app', 'News');
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="news-index">
@@ -24,10 +24,33 @@ $this->params['breadcrumbs'][] = $this->title;
             // 'id',
             'article',
             'intro_text',
-            'description:ntext',
             'author',
-            'created_at',
-            // 'updated_at',
+            [
+                'attribute' => 'created_at',
+                'format' => 'html',
+                'label' => Yii::t('app', 'Created At'),
+                'value' => function($data)
+                {
+                    return Yii::$app->formatter->asDate($data['created_at']);
+                }
+            ],
+            [
+                'attribute' => 'updated_at',
+                'format' => 'html',
+                'label' => Yii::t('app', 'Updated At'),
+                'value' => function($data)
+                {
+                    return Yii::$app->formatter->asDate($data['updated_at']);
+                }
+            ],
+            [
+                'label' => Yii::t('app', 'Image'),
+                'format' => 'html',
+                'value' => function($data){
+                    return Html::img($data['image'],
+                        ['width' => '50px']);
+                },
+            ],
 
             ['class' => 'yii\grid\ActionColumn',
                 'template' => '{view}'],

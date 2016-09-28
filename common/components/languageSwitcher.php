@@ -56,7 +56,7 @@ class languageSwitcher extends Widget
         foreach($languages as $code => $language)
         {
             $temp = [];
-            $temp['label'] = $language;
+            $temp['label'] = Yii::t('app', $language);
             $temp['url'] = Url::current(['language' => $code]);
             array_push($items, $temp);
         }

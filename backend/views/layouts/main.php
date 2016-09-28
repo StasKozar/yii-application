@@ -29,23 +29,23 @@ AppAsset::register($this);
 <div class="wrap">
     <?php
     NavBar::begin([
-        'brandLabel' => 'My Company',
+        'brandLabel' => Yii::t('app', 'My Company'),
         'brandUrl' => Yii::$app->homeUrl,
         'options' => [
             'class' => 'navbar-inverse navbar-fixed-top',
         ],
     ]);
     $menuItems = [
-        ['label' => 'Home', 'url' => ['/site/index']],
+        ['label' => Yii::t('app', 'Home'), 'url' => ['/site/index']],
     ];
     if (Yii::$app->user->isGuest) {
-        $menuItems[] = ['label' => 'Login', 'url' => ['/site/login']];
+        $menuItems[] = ['label' => Yii::t('app', 'Login'), 'url' => ['/site/login']];
     } else {
-        $menuItems[] = ['label' => 'News', 'url' => ['/news/index']];
+        $menuItems[] = ['label' => Yii::t('app', 'News'), 'url' => ['/news/index']];
         $menuItems[] = '<li>'
             . Html::beginForm(['/site/logout'], 'post')
-            . Html::submitButton(
-                'Logout (' . Yii::$app->user->identity->username . ')',
+            . Html::submitButton(Yii::t('app',
+                    'Logout') .'('. Yii::$app->user->identity->username .')',
                 ['class' => 'btn btn-link']
             )
             . Html::endForm()

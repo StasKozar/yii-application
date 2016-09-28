@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'language' => 'en-US',
+    'language' => 'ru-RU',
     'vendorPath' => dirname(dirname(__DIR__)) . '/vendor',
     'bootstrap' => ['languageSwitcher',],
     'components' => [
@@ -11,7 +11,25 @@ return [
         'languageSwitcher' => [
             'class' => 'common\components\languageSwitcher',
         ],
-        'urlManager' => [
+        'formatter' => [
+            'dateFormat' => 'php:d/m/Y H:i:s',
+            'defaultTimeZone' => 'Europe/Paris',
+            'decimalSeparator' => ',',
+            'thousandSeparator' => ' ',
+        ],
+        'i18n' => [
+            'translations' => [
+                'frontend*' => [
+                    'class' => 'yii\i18n\PhpMessageSource',
+                    'basePath' => '@common/messages',
+                ],
+                'backend*' => [
+                    'class' => 'yii\i18n\PhpMessageSource',
+                    'basePath' => '@common/messages',
+                ],
+            ],
+        ],
+        /*'urlManager' => [
             'class' => 'yii\web\UrlManager',
             // Disable upload.php
             'showScriptName' => false,
@@ -22,6 +40,9 @@ return [
                 '<controller:\w+>/<action:\w+>/<id:\d+>' => '<controller>/<action>',
                 '<controller:\w+>/<action:\w+>' => '<controller>/<action>',
             ),
-        ],
+        ],*/
+    ],
+    'params' => [
+        'baseUrl' => 'http://localhost/yii-application'
     ],
 ];
