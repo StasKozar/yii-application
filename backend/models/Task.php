@@ -75,7 +75,6 @@ class Task extends \yii\db\ActiveRecord
         $B = 'Busy';
         $U = 'Unavailable';
         $F = 'Free';
-        $result = [];
         $searchPeriod = [];
         $model = $this;
         $tasks = $this::find()->all();
@@ -88,50 +87,87 @@ class Task extends \yii\db\ActiveRecord
         $interval = new \DateInterval('P1D');
         $period = new \DatePeriod($begin, $interval, $recurrences->days);
 
-        $i = 0;
+        $freePeriod = [];
         foreach ($period as $date)
         {
-            if (!empty($result)) {
+            if(in_array($date->format('w'), $workDays)){
                 $start = $date->format('Y-m-d H:i');
+                $end = $date->format('Y-m-d').' '.$from;
+                $type = $U;
+                $freePeriod[] = new Helper($start, $end, $type);
+                $start = $date->format('Y-m-d').' '.$from;
+                $end = $date->format('Y-m-d').' '.$to;
+                $type = $F;
+                $freePeriod[] = (new Helper($start, $end, $type));
+                $start = $date->format('Y-m-d').' '.$to;
                 $end = $date->format('Y-m-d 23:59');
                 $type = $U;
-                $previous = $result[$i];
-                $result[] = new Helper($start, $end, $type, $previous);
-                $i++;
+                $freePeriod[] = (new Helper($start, $end, $type));
             } else {
                 $start = $date->format('Y-m-d H:i');
                 $end = $date->format('Y-m-d 23:59');
                 $type = $U;
-                $result[] = new Helper($start, $end, $type);
+                $freePeriod[] = (new Helper($start, $end, $type));
             }
-
         }
 
-        foreach ($period as $date)
-        {
-            if (in_array($date->format('w'), $workDays))
-            {
-                $start = $date->format('Y-m-d').' '.$from;
-                $end = $date->format('Y-m-d').' '.$to;
-                $type = $F;
-                foreach ($result as $value)
+        $workPeriod = [];
+        foreach ($tasks as $task){
+            $start = substr($task['begin'], 0, -3);
+            $end = substr($task['end'], 0, -3);
+            $type = $B;
+            $workPeriod[] = new Helper($start, $end, $type);
+        }
+
+        for($i=0, $j=1; $i <count($workPeriod); $i++, $j++){
+            if(isset($workPeriod[$j])){
+                if($workPeriod[$i]->begin < $workPeriod[$j]->begin && $workPeriod[$j]->begin < $workPeriod[$i]->end)
                 {
-                    if (substr($value->begin, 0, -6) == substr($start, 0, -6))
-                    {
-                        $value->end = $start;
-                        $result[] = new Helper($start, $end, $type, $value);
-                    }
+                    $workPeriod[$i]->end = $workPeriod[$j]->end;
+                    array_splice($workPeriod, $j, 1);
+                }elseif($workPeriod[$j]->begin > $workPeriod[$i]->begin && $workPeriod[$j]->end < $workPeriod[$i]->end){
+                    $workPeriod[$i]->begin = $workPeriod[$j]->begin;
+                    $workPeriod[$i]->end = $workPeriod[$j]->end;
+                    array_splice($workPeriod, $j, 1);
                 }
             }
-
         }
+
+        foreach ($workPeriod as $work) {
+            for($i=0, $j=1; $i < count($freePeriod); $i++, $j++)
+            {
+                if(substr($work->begin, 0, -6) == substr($freePeriod[$i]->begin, 0, -6))
+                {
+                    if(isset($freePeriod[$j]))
+                    {
+                        if($work->begin > $freePeriod[$i]->begin && $freePeriod[$i]->end < $work->end
+                        && $work->begin < $freePeriod[$i]->end)
+                        {
+                            $freePeriod[$i]->end = $work->begin;
+                            $freePeriod[] = $work;
+                            $freePeriod[$j]->begin = $work->end;
+                        }elseif($work->begin > $freePeriod[$i]->begin && $freePeriod[$i]->end > $work->end)
+                        {
+                            $freePeriod[$i]->end = $work->begin;
+                            $freePeriod[] = $work;
+                            $start = $work->end;
+                            $end = $freePeriod[$j]->begin;
+                            $type = $freePeriod[$i]->type;
+                            $freePeriod[] = (new Helper($start, $end, $type));
+                        }
+                    }
+                }
+
+            }
+        }
+
+
         var_dump(1);
-        var_dump($result);
+        sort($freePeriod);
+        var_dump($freePeriod);
+        var_dump($searchPeriod);
         die();
 
-        foreach ($tasks as $task){
-
-        }
     }
 
     /*public function getTime()
