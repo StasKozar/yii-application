@@ -153,10 +153,21 @@ class Task extends \yii\db\ActiveRecord
                             $start = $work->end;
                             $end = $freePeriod[$j]->begin;
                             $type = $freePeriod[$i]->type;
-                            $freePeriod[] = (new Helper($start, $end, $type));
+                            $freePeriod[] = new Helper($start, $end, $type);
+                            sort($freePeriod);
                         }
                     }
+                }elseif (substr($work->begin, 0, -6) != substr($freePeriod[$i]->begin, 0, -6)
+                && substr($work->end, 0, -6) == substr($freePeriod[$i]->begin, 0, -6)){
+                    if($freePeriod[$i]->end > $work->end)
+                    {
+                        $freePeriod[$i]->end = $work->end;
+                        $freePeriod[$i]->type = $work->type;
+                        $freePeriod[] = $work;
+                        $freePeriod[$j]->begin = $work->end;
+                    }
                 }
+
 
             }
         }
