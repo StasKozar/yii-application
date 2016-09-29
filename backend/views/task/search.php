@@ -39,21 +39,24 @@ $this->params['breadcrumbs'][] = $this->title;
     if(!empty($time)){
         echo '<h2>Time Task</h2>';
         echo "<table border='2px' style='border-collapse: separate'>";
-        foreach ($notAvailable as $key => $date)
+        foreach ($period as $date)
         {
             echo "<tr>";
-            echo "<td>".$date[0]->format('Y-m-d')."</td>";
+            echo "<td>".$date->format('Y-m-d')."</td>";
             foreach($time as $value)
             {
-                if($date[0]->format('Y-m-d') == substr($value, 0, -7)){
-                    if(strpos($value, "U") > 0){
-                        echo "<td style='background: grey'>".substr($value, 11, -1)."</td>>";
+                if($date->format('Y-m-d') == substr($value->begin, 0, -6)){
+                    if($value->type == 'Unavailable'){
+                        echo "<td style='background: grey'>".substr($value->begin, 11)."</td>>";
+                        echo "<td style='background: grey'>".substr($value->end, 11)."</td>>";
                     }
-                    if(strpos($value, "F") > 0){
-                        echo "<td style='background: greenyellow'>".substr($value, 11, -1)."</td>>";
+                    if($value->type == 'Free'){
+                        echo "<td style='background: greenyellow'>".substr($value->begin, 11)."</td>>";
+                        echo "<td style='background: greenyellow'>".substr($value->end, 11)."</td>>";
                     }
-                    if(strpos($value, "B") > 0){
-                        echo "<td style='background: red'>".substr($value, 11, -1)."</td>>";
+                    if($value->type == 'Busy'){
+                        echo "<td style='background: red'>".substr($value->begin, 11)."</td>>";
+                        echo "<td style='background: red'>".substr($value->end, 11)."</td>>";
                     }
                 }
             }

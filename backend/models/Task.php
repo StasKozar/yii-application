@@ -75,39 +75,39 @@ class Task extends \yii\db\ActiveRecord
         $B = 'Busy';
         $U = 'Unavailable';
         $F = 'Free';
-        $searchPeriod = [];
         $model = $this;
         $tasks = $this::find()->all();
         $workDays = $this::getWorkDays();
         $workTime = $this::getWorkTime();
         $from = date('H:i', $workTime['begin']);
         $to = date('H:i', $workTime['end']);
-        $begin = new \DateTime($model->begin);
-        $recurrences = $begin->diff(new \DateTime($model->end));
+        $beginPeriod = new \DateTime($model->begin);
+        $endPeriod = new \DateTime($model->end);
+        $recurrences = $beginPeriod->diff($endPeriod);
         $interval = new \DateInterval('P1D');
-        $period = new \DatePeriod($begin, $interval, $recurrences->days);
+        $period = new \DatePeriod($beginPeriod, $interval, $recurrences->days);
 
-        $freePeriod = [];
+        $searchPeriod = [];
         foreach ($period as $date)
         {
             if(in_array($date->format('w'), $workDays)){
                 $start = $date->format('Y-m-d H:i');
                 $end = $date->format('Y-m-d').' '.$from;
                 $type = $U;
-                $freePeriod[] = new Helper($start, $end, $type);
+                $searchPeriod[] = new Helper($start, $end, $type);
                 $start = $date->format('Y-m-d').' '.$from;
                 $end = $date->format('Y-m-d').' '.$to;
                 $type = $F;
-                $freePeriod[] = (new Helper($start, $end, $type));
+                $searchPeriod[] = (new Helper($start, $end, $type));
                 $start = $date->format('Y-m-d').' '.$to;
                 $end = $date->format('Y-m-d 23:59');
                 $type = $U;
-                $freePeriod[] = (new Helper($start, $end, $type));
+                $searchPeriod[] = (new Helper($start, $end, $type));
             } else {
                 $start = $date->format('Y-m-d H:i');
                 $end = $date->format('Y-m-d 23:59');
                 $type = $U;
-                $freePeriod[] = (new Helper($start, $end, $type));
+                $searchPeriod[] = (new Helper($start, $end, $type));
             }
         }
 
@@ -121,11 +121,11 @@ class Task extends \yii\db\ActiveRecord
 
         for($i=0, $j=1; $i <count($workPeriod); $i++, $j++){
             if(isset($workPeriod[$j])){
-                if($workPeriod[$i]->begin < $workPeriod[$j]->begin && $workPeriod[$j]->begin < $workPeriod[$i]->end)
+                if($workPeriod[$i]->begin <= $workPeriod[$j]->begin && $workPeriod[$j]->begin <= $workPeriod[$i]->end)
                 {
                     $workPeriod[$i]->end = $workPeriod[$j]->end;
                     array_splice($workPeriod, $j, 1);
-                }elseif($workPeriod[$j]->begin > $workPeriod[$i]->begin && $workPeriod[$j]->end < $workPeriod[$i]->end){
+                }elseif($workPeriod[$j]->begin >= $workPeriod[$i]->begin && $workPeriod[$j]->end <= $workPeriod[$i]->end){
                     $workPeriod[$i]->begin = $workPeriod[$j]->begin;
                     $workPeriod[$i]->end = $workPeriod[$j]->end;
                     array_splice($workPeriod, $j, 1);
@@ -134,186 +134,61 @@ class Task extends \yii\db\ActiveRecord
         }
 
         foreach ($workPeriod as $work) {
-            for($i=0, $j=1; $i < count($freePeriod); $i++, $j++)
+            for($i=0, $j=1; $i < count($searchPeriod); $i++, $j++)
             {
-                if(substr($work->begin, 0, -6) == substr($freePeriod[$i]->begin, 0, -6))
-                {
-                    if(isset($freePeriod[$j]))
+                if (substr($work->begin, 0, -6) == substr($searchPeriod[$i]->begin, 0, -6)
+                    && substr($work->end, 0, -6) > $endPeriod->format('Y-m-d')){
+                    $start = $work->begin;
+                    $end = $searchPeriod[$i]->end;
+                    $type = $work->type;
+                    $searchPeriod[] = new Helper($start, $end, $type);
+                    $searchPeriod[$i]->end = $work->begin;
+                    break;
+                }elseif (substr($work->begin, 0, -6) < $beginPeriod->format('Y-m-d')
+                    && substr($work->end, 0, -6) == substr($searchPeriod[$i]->end, 0, -6)){
+                    if($searchPeriod[$i]->end > $work->end)
                     {
-                        if($work->begin > $freePeriod[$i]->begin && $freePeriod[$i]->end < $work->end
-                        && $work->begin < $freePeriod[$i]->end)
+                        $start = $searchPeriod[$i]->begin;
+                        $end = $work->end;
+                        $type = $work->type;
+                        $searchPeriod[] = new Helper($start, $end, $type);
+                        $searchPeriod[$i]->begin = $work->end;
+                        break;
+                    }elseif($searchPeriod[$i]->end < $work->end){
+                        $searchPeriod[$i]->end = $work->end;
+                        $searchPeriod[$i]->type = $work->type;
+                        $searchPeriod[$j]->begin = $work->end;
+                    }
+                }elseif(substr($work->begin, 0, -6) == substr($searchPeriod[$i]->begin, 0, -6))
+                {
+                    if (isset($searchPeriod[$j])) {
+                        if ($work->begin > $searchPeriod[$i]->begin && $searchPeriod[$i]->end < $work->end
+                            && $work->begin < $searchPeriod[$i]->end)
                         {
-                            $freePeriod[$i]->end = $work->begin;
-                            $freePeriod[] = $work;
-                            $freePeriod[$j]->begin = $work->end;
-                        }elseif($work->begin > $freePeriod[$i]->begin && $freePeriod[$i]->end > $work->end)
-                        {
-                            $freePeriod[$i]->end = $work->begin;
-                            $freePeriod[] = $work;
+                            $searchPeriod[$i]->end = $work->begin;
+                            $searchPeriod[] = $work;
+                            $searchPeriod[$j]->begin = $work->end;
+                        } elseif ($work->begin > $searchPeriod[$i]->begin && $searchPeriod[$i]->end > $work->end) {
+                            $searchPeriod[] = $work;
                             $start = $work->end;
-                            $end = $freePeriod[$j]->begin;
-                            $type = $freePeriod[$i]->type;
-                            $freePeriod[] = new Helper($start, $end, $type);
-                            sort($freePeriod);
-                        }
-                    }
-                }elseif (substr($work->begin, 0, -6) != substr($freePeriod[$i]->begin, 0, -6)
-                && substr($work->end, 0, -6) == substr($freePeriod[$i]->begin, 0, -6)){
-                    if($freePeriod[$i]->end > $work->end)
-                    {
-                        $freePeriod[$i]->end = $work->end;
-                        $freePeriod[$i]->type = $work->type;
-                        $freePeriod[] = $work;
-                        $freePeriod[$j]->begin = $work->end;
-                    }
-                }
-
-
-            }
-        }
-
-
-        var_dump(1);
-        sort($freePeriod);
-        var_dump($freePeriod);
-        var_dump($searchPeriod);
-        die();
-
-    }
-
-    /*public function getTime()
-    {
-        $U = 'U';
-        $F = 'F';
-        $B = 'B';
-        $model = $this;
-        $tasks = $this::find()->all();
-        $workPeriod = [];
-        $searchPeriod = [];
-        $result = [];
-        $period = [];
-        $notAvailablePeriod = [];
-        $taskPeriod = [];
-        $workTime = $this::getWorkTime();
-        $from = date('H:i', $workTime['begin']);
-        $to = date('H:i', $workTime['end']);
-        $workDays = $this::getWorkDays();
-
-        foreach ($tasks as $key => $value) {
-            $value_begin = new \DateTime($value->attributes['begin']);
-            $value_end = new \DateTime($value->attributes['end']);
-            $taskPeriod[] = $value_begin->format('Y-m-d');
-
-            $workPeriod[$key]['begin'] = new \DateTime($value_begin->format('Y-m-d H:i'));
-            $workPeriod[$key]['end'] = new \DateTime($value_end->format('Y-m-d H:i'));
-        }
-
-        $begin = new \DateTime($model->begin);
-        $date_diff = $begin->diff(new \DateTime($model->end));
-
-        for ($i = 0; $i <= $date_diff->days; $i++) {
-            if (in_array($begin->format('w'), $workDays)) {
-                $notAvailablePeriod[$i][] = new \DateTime($begin->format('Y-m-d H:i'));
-                $period[$i][] = new \DateTime($begin->format('Y-m-d') . ' ' . $from);
-                $period[$i][] = new \DateTime($begin->format('Y-m-d') . ' ' . $to);
-                $notAvailablePeriod[$i][] = new \DateTime($begin->format('Y-m-d 23:59'));
-            }else{
-                $notAvailablePeriod[$i][] = new \DateTime($begin->format('Y-m-d H:i'));
-                $notAvailablePeriod[$i][] = new \DateTime($begin->format('Y-m-d 23:59'));
-            }
-            $begin->add(new \DateInterval('P1D'));
-        }
-
-        foreach ($notAvailablePeriod as $key => $value) {
-            for ($i = 0; $i < count($period); $i++) {
-                if (!isset($period[$i])) {
-                    continue;
-                }
-                if ($value[0]->format('Y-m-d') == $period[$i][0]->format('Y-m-d')) {
-                    if ($value[0]->format('Y-m-d H:i') == $period[$i][0]->format('Y-m-d H:i')
-                        && $value[1]->format('Y-m-d H:i') == $period[$i][1]->format('Y-m-d H:i')
-                    ) {
-                        $result[] = $period[$i][0]->format('Y-m-d H:i') . $F;
-                        $result[] = $period[$i][1]->format('Y-m-d H:i') . $F;
-                        continue;
-                    } elseif ($value[0]->format('Y-m-d H:i') == $period[$i][0]->format('Y-m-d H:i')) {
-                        $result[] = $period[$i][0]->format('Y-m-d H:i') . $F;
-                        $result[] = $period[$i][1]->format('Y-m-d H:i') . $F;
-                        $result[] = $period[$i][1]->format('Y-m-d H:i') . $U;
-                        $result[] = $value[1]->format('Y-m-d H:i') . $U;
-                    } elseif ($value[1]->format('Y-m-d H:i') == $period[$i][1]->format('Y-m-d H:i')) {
-                        $result[] = $value[0]->format('Y-m-d H:i') . $U;
-                        $result[] = $period[$i][0]->format('Y-m-d H:i') . $U;
-                        $result[] = $period[$i][0]->format('Y-m-d H:i') . $F;
-                        $result[] = $period[$i][1]->format('Y-m-d H:i') . $F;
-                    } else {
-                        $result[] = $value[0]->format('Y-m-d H:i') . $U;
-                        $result[] = $period[$i][0]->format('Y-m-d H:i') . $U;
-                        $result[] = $period[$i][0]->format('Y-m-d H:i') . $F;
-                        $result[] = $period[$i][1]->format('Y-m-d H:i') . $F;
-                        $result[] = $period[$i][1]->format('Y-m-d H:i') . $U;
-                        $result[] = $value[1]->format('Y-m-d H:i') . $U;
-                    }
-                } else {
-                    $result[] = $value[0]->format('Y-m-d H:i') . $U;
-                    $result[] = $value[1]->format('Y-m-d H:i') . $U;
-                }
-            }
-        }
-
-
-        while (list($key, $value) = each($result)) {
-            if (strpos($value, $F) > 0) {
-                if (!in_array(substr($value, 0, -7), $taskPeriod))
-                {
-                    $searchPeriod[] = $value;
-                }
-                for ($i = 0; $i < count($workPeriod); $i++) {
-                    if (substr($value, 0, -7) == $workPeriod[$i]['begin']->format('Y-m-d')) {
-                        if (substr($value, 0, -1) == $workPeriod[$i]['begin']->format('Y-m-d H:i')
-                            && substr($result[$key + 1], 0, -1) == $workPeriod[$i]['end']->format('Y-m-d H:i')
-                        ) {
-                            $searchPeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i') . $B;
-                            $searchPeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i') . $B;
-                        } elseif (substr($value, 0, -1) == $workPeriod[$i]['end']->format('Y-m-d H:i')
-                            && substr($result[$key - 1], 0, -1) == $workPeriod[$i]['begin']->format('Y-m-d H:i')
-                        ) {
-                            continue;
-                        } elseif (substr($value, 0, -1) == $workPeriod[$i]['begin']->format('Y-m-d H:i')) {
-                            $searchPeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i') . $B;
-                            $searchPeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i') . $B;
-                            $searchPeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i') . $F;
-                        } elseif (substr($value, 0, -1) == $workPeriod[$i]['end']->format('Y-m-d H:i')
-                            && substr($result[$key - 1], 0, -1) != $workPeriod[$i]['begin']->format('Y-m-d H:i')
-                        ) {
-                            $searchPeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i') . $F;
-                            $searchPeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i') . $B;
-                            $searchPeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i') . $B;
-                        } elseif (substr($value, 0, -1) < $workPeriod[$i]['begin']->format('Y-m-d H:i')
-                            && substr($result[$key + 1], 0, -1) > $workPeriod[$i]['end']->format('Y-m-d H:i')
-                        ) {
-                            $searchPeriod[] = $value;
-                            $searchPeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i') . $F;
-                            $searchPeriod[] = $workPeriod[$i]['begin']->format('Y-m-d H:i') . $B;
-                            $searchPeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i') . $B;
-                            $searchPeriod[] = $workPeriod[$i]['end']->format('Y-m-d H:i') . $F;
-                        } else {
-                            $searchPeriod[] = $value;
+                            $end = $searchPeriod[$i]->end;
+                            $type = $searchPeriod[$i]->type;
+                            $searchPeriod[] = new Helper($start, $end, $type);
+                            $searchPeriod[$i]->end = $work->begin;
+                            sort($searchPeriod);
                         }
                     }
                 }
             }
         }
-
-
 
         sort($searchPeriod);
-        $searchPeriod = array_unique($searchPeriod);
         return [
             'time' => $searchPeriod,
-            'period' => $notAvailablePeriod,
+            'period' => $period,
         ];
-    }*/
+
+    }
 
     public function validateDate()
     {
@@ -322,58 +197,43 @@ class Task extends \yii\db\ActiveRecord
 
         $task_begin = new \DateTime($model->begin);
         $task_end = new \DateTime($model->end);
-        $workTime = $this::getWorkTime();
-        $workDays = $this::getWorkDays();
 
         if($task_begin >= $task_end){
             return ['message' => 'Please choose another date'];
         }
+        if (empty($tasks)) {
+            $name = 'task1';
 
-        /*if (in_array(date_format($task_begin, 'w'), $workDays)
-            && in_array(date_format($task_end, 'w'), $workDays))
-        {*/
-            /*if (date('H:i', $workTime['begin']) <= date_format($task_begin, 'H:i')
-                && date('H:i', $workTime['end']) >= date_format($task_end, 'H:i'))
-            {*/
-                if (empty($tasks))
-                {
-                    $name = 'task1';
+            return ['name' => $name];
+        }
+        $temp_begin = '';
+        $temp_end = '';
+        foreach ($tasks as $key => $value) {
+            $value_begin = new \DateTime($value->attributes['begin']);
+            $value_end = new \DateTime($value->attributes['end']);
 
-                    return ['name' => $name];
-                }
-                $temp_begin = '';
-                $temp_end = '';
-                foreach ($tasks as $key => $value) {
-                    $value_begin = new \DateTime($value->attributes['begin']);
-                    $value_end = new \DateTime($value->attributes['end']);
+            if (($value_begin > $task_begin || $value_end < $task_begin)
+                && ($value_begin > $task_end || $value_end < $task_end)
+                && !($task_begin < $value_begin && $value_end < $task_end))
+            {
+                $temp_begin = (array)$task_begin;
+                $temp_end = (array)$task_end;
 
-                    /*if (($value_begin > $task_begin || $value_end < $task_begin)
-                        && ($value_begin > $task_end || $value_end < $task_end)
-                        && !($task_begin < $value_begin && $value_end < $task_end))
-                    {*/
-                        $temp_begin = (array)$task_begin;
-                        $temp_end = (array)$task_end;
-
-                    /*} else {
-                        return [
-                            'message' => 'Please choose another time!',
-                        ];
-                    }*/
-                }
-                $begin = $temp_begin['date'];
-                $end = $temp_end['date'];
-                $name = 'task1';
-
+            } else {
                 return [
-                    'begin' => $begin,
-                    'end' => $end,
-                    'name' => $name
+                    'message' => 'Please choose another time!',
                 ];
+            }
+        }
+        $begin = $temp_begin['date'];
+        $end = $temp_end['date'];
+        $name = 'task1';
 
-            /*}
-            return ['message' => 'Please choose another time!',];*/
-        /*}else{
-            return ['message' => 'Please choose another date!',];
-        }*/
+        return [
+            'begin' => $begin,
+            'end' => $end,
+            'name' => $name
+        ];
+
     }
 }
