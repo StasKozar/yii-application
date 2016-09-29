@@ -70,16 +70,16 @@ class TaskController extends Controller
     {
         $model = new Task();
         $time = null;
-        $notAvailable = null;
+        $period = null;
         if($model->load(Yii::$app->request->post()))
         {
             $result = $model->getTime();
             $time = $result['time'];
-            $notAvailable = $result['period'];
+            $period = $result['period'];
             return $this->render('search', [
                 'model' => $model,
                 'time' => $time,
-                'notAvailable' => $notAvailable,
+                'period' => $period,
             ]);
         }
         else
@@ -87,7 +87,7 @@ class TaskController extends Controller
             return $this->render('search', [
                 'model' => $model,
                 'result' => $time,
-                'notAvailable' => $notAvailable,
+                'period' => $period,
             ]);
         }
     }
