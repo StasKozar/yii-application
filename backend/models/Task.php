@@ -4,6 +4,7 @@ namespace backend\models;
 
 use Yii;
 use backend\models\Helper;
+use \yii\db\ActiveRecord;
 
 
 /**
@@ -15,10 +16,23 @@ use backend\models\Helper;
  * @property string $end
  * @property integer $active
  */
-class Task extends \yii\db\ActiveRecord
+class Task extends ActiveRecord
 {
     public $workTime;
     public $workDays;
+
+
+    public function fields()
+    {
+        return [
+            'begin',
+            'end',
+        ];
+    }
+    public function extraFields()
+    {
+        return ['name', 'id', 'active'];
+    }
 
 
     public static function getWorkTime()
@@ -183,6 +197,11 @@ class Task extends \yii\db\ActiveRecord
         }
 
         sort($searchPeriod);
+
+        foreach ($period as $date){
+            var_dump($date);
+        }
+        die();
         return [
             'time' => $searchPeriod,
             'period' => $period,

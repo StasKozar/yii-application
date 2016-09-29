@@ -15,6 +15,9 @@ return [
     'components' => [
         'request' => [
             'baseUrl'=>'/admin',
+            'parsers' => [
+                'application/json' => 'yii\web\JsonParser',
+            ],
             ],
         'user' => [
             'identityClass' => 'common\models\User',
@@ -58,6 +61,13 @@ return [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                [
+                    'class' => 'yii\rest\UrlRule',
+                    'controller' => 'tasks',
+                    'extraPatterns' => [
+                        'POST /search' => 'search',
+                    ],
+                ],
             ],
         ],
 
