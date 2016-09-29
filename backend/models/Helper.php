@@ -13,7 +13,5 @@ class Helper
         $this->begin = $begin;
         $this->end = $end;
         $this->type = $type;
-
     }
-
 }

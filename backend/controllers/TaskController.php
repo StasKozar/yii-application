@@ -2,17 +2,37 @@
 
 namespace backend\controllers;
 
-use Faker\Provider\cs_CZ\DateTime;
 use Yii;
 use backend\models\Task;
 use backend\models\TaskSearch;
-use yii\web\Controller;
+use yii\base\Controller;
+use yii\rest\ActiveController;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 
 /**
  * TaskController implements the CRUD actions for Task model.
  */
+/*class TaskController extends ActiveController
+{
+    public $modelClass = 'backend\models\Task';
+
+    public function actions()
+    {
+        return [
+            'index' => [
+                'class' => 'yii\rest\IndexAction',
+                'modelClass' => $this->modelClass,
+                'checkAccess' => [$this, 'checkAccess'],
+                'prepareDataProvider' => function ($action) {
+                    return new ActiveDataProvider([
+                        'query' => Pages::find()->where(...),
+                    ]);
+                }
+            ],
+        ];
+    }
+}*/
 class TaskController extends Controller
 {
     /**
@@ -38,19 +58,10 @@ class TaskController extends Controller
     {
         $searchModel = new TaskSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
-        $tasks = Task::find()->all();
-        $workTime = Task::getWorkTime();
-        $begin = date('H:i:s',$workTime['begin']);
-        $end = date('H:i:s',$workTime['end']);
-        $workDays = Task::getWorkDays();
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'tasks' => $tasks,
-            'begin' => $begin,
-            'end' => $end,
-            'workDays' => $workDays
         ]);
     }
 
