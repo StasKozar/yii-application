@@ -16,9 +16,18 @@ return [
         'request' => [
             'baseUrl'=>'/admin',
             'parsers' => [
-                'application/json' => 'yii\web\JsonParser',
+                'application/vnd.api+json' => 'tuyakhov\jsonapi\JsonApiParser',
             ],
+        ],
+        'response' => [
+            'formatters' => [
+                \yii\web\Response::FORMAT_JSON => [
+                    'class' => 'tuyakhov\jsonapi\JsonApiResponseFormatter',
+                    'prettyPrint' => YII_DEBUG,
+                    'encodeOptions' => JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
+                ],
             ],
+        ],
         'user' => [
             'identityClass' => 'common\models\User',
             'enableAutoLogin' => true,
@@ -65,7 +74,7 @@ return [
                     'class' => 'yii\rest\UrlRule',
                     'controller' => 'tasks',
                     'extraPatterns' => [
-                        'POST /search' => 'search',
+                        'GET /search' => 'search',
                     ],
                 ],
             ],

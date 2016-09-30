@@ -1,11 +1,10 @@
 <?php
 
-namespace backend\models;
+namespace api\modules\v1\models;
 
 use Yii;
-use backend\models\Helper;
+use api\modules\v1\models\Helper;
 use \yii\db\ActiveRecord;
-use tuyakhov\jsonapi\ResourceTrait;
 
 
 /**
@@ -21,7 +20,6 @@ class Task extends ActiveRecord
 {
     public $workTime;
     public $workDays;
-    use ResourceTrait;
 
 
     public function fields()
@@ -29,6 +27,9 @@ class Task extends ActiveRecord
         return [
             'begin',
             'end',
+            /*'period' => function($model){
+                return $model->getTime();
+            },*/
         ];
     }
     public function extraFields()
@@ -114,16 +115,16 @@ class Task extends ActiveRecord
                 $start = $date->format('Y-m-d').' '.$from;
                 $end = $date->format('Y-m-d').' '.$to;
                 $type = $F;
-                $searchPeriod[] = (new Helper($start, $end, $type));
+                $searchPeriod[] = new Helper($start, $end, $type);
                 $start = $date->format('Y-m-d').' '.$to;
                 $end = $date->format('Y-m-d 23:59');
                 $type = $U;
-                $searchPeriod[] = (new Helper($start, $end, $type));
+                $searchPeriod[] = new Helper($start, $end, $type);
             } else {
                 $start = $date->format('Y-m-d H:i');
                 $end = $date->format('Y-m-d 23:59');
                 $type = $U;
-                $searchPeriod[] = (new Helper($start, $end, $type));
+                $searchPeriod[] = new Helper($start, $end, $type);
             }
         }
 
@@ -198,16 +199,11 @@ class Task extends ActiveRecord
             }
         }
 
-        return $this->getApiTime($searchPeriod, $period);
-
-    }
-
-    public function getApiTime($searchPeriod, $period=null)
-    {
         return [
             'time' => $searchPeriod,
             'period' => $period,
         ];
+
     }
 
     public function validateDate()

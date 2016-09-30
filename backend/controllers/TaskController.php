@@ -33,8 +33,9 @@ use yii\filters\VerbFilter;
         ];
     }
 }*/
-class TaskController extends Controller
+class TaskController extends ActiveController
 {
+    public $modelClass = 'backend\models\Task';
     /**
      * @inheritdoc
      */

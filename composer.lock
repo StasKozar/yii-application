@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "40eaa58e4aa3502159cd9fbea74658bb",
-    "content-hash": "a7550c4f64b1503e5034e2b456cd3cbb",
+    "hash": "bf0f048f64307b1aa3743f5754e95073",
+    "content-hash": "ae595edd9bd2c1a54be20770708e3f70",
     "packages": [
         {
             "name": "2amigos/yii2-date-time-picker-widget",
@@ -571,6 +571,48 @@
                 "mailer"
             ],
             "time": "2016-07-08 11:51:25"
+        },
+        {
+            "name": "tuyakhov/yii2-json-api",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tuyakhov/yii2-json-api.git",
+                "reference": "491c94a9bd530209b7bc5b45bc7009c4cde91a0f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tuyakhov/yii2-json-api/zipball/491c94a9bd530209b7bc5b45bc7009c4cde91a0f",
+                "reference": "491c94a9bd530209b7bc5b45bc7009c4cde91a0f",
+                "shasum": ""
+            },
+            "require": {
+                "yiisoft/yii2": "*"
+            },
+            "type": "yii2-extension",
+            "autoload": {
+                "psr-4": {
+                    "tuyakhov\\jsonapi\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Anton Tuyakhov",
+                    "email": "atuyakhov@gmail.com"
+                }
+            ],
+            "description": "Implementation of JSON API specification for the Yii framework",
+            "keywords": [
+                "api",
+                "json",
+                "json api",
+                "yii2"
+            ],
+            "time": "2016-09-14 07:40:32"
         },
         {
             "name": "yiisoft/yii2",
@@ -1173,7 +1215,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "tuyakhov/yii2-json-api": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
