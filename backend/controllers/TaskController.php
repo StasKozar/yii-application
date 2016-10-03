@@ -5,7 +5,10 @@ namespace backend\controllers;
 use Yii;
 use backend\models\Task;
 use backend\models\TaskSearch;
+use yii\web\Response;
+use yii\filters\ContentNegotiator;
 use yii\base\Controller;
+use yii\helpers\ArrayHelper;
 use yii\rest\ActiveController;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -13,26 +16,6 @@ use yii\filters\VerbFilter;
 /**
  * TaskController implements the CRUD actions for Task model.
  */
-/*class TaskController extends ActiveController
-{
-    public $modelClass = 'backend\models\Task';
-
-    public function actions()
-    {
-        return [
-            'index' => [
-                'class' => 'yii\rest\IndexAction',
-                'modelClass' => $this->modelClass,
-                'checkAccess' => [$this, 'checkAccess'],
-                'prepareDataProvider' => function ($action) {
-                    return new ActiveDataProvider([
-                        'query' => Pages::find()->where(...),
-                    ]);
-                }
-            ],
-        ];
-    }
-}*/
 class TaskController extends ActiveController
 {
     public $modelClass = 'backend\models\Task';
@@ -126,15 +109,10 @@ class TaskController extends ActiveController
                 $model->begin = $result['begin'];
             if (!empty($result['end']))
                 $model->end = $result['end'];
-            $i = 1;
-            while (true) {
-                $task = 'task' . $i;
-                $model->name = $task;
-                if ($model->save()) {
-                    return $this->redirect(['view', 'id' => $model->id]);
-                };
-                $i++;
-            }
+
+            if ($model->save()) {
+                return $this->redirect(['view', 'id' => $model->id]);
+            };
 
         } else {
             return $this->render('create', [
@@ -153,8 +131,22 @@ class TaskController extends ActiveController
     {
         $model = $this->findModel($id);
 
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        if ($model->load(Yii::$app->request->post())) {
+            $result = $model->validateDate();
+            if (!empty($result['message'])){
+                return $this->render('create', [
+                    'model' => $model,
+                    'message' => $result['message'],
+                ]);
+            }
+            if (!empty($result['begin']))
+                $model->begin = $result['begin'];
+            if (!empty($result['end']))
+                $model->end = $result['end'];
+
+            if ($model->save()) {
+                return $this->redirect(['view', 'id' => $model->id]);
+            };
         } else {
             return $this->render('update', [
                 'model' => $model,

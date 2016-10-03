@@ -4,6 +4,7 @@ namespace backend\models;
 
 use Yii;
 use backend\models\Helper;
+use backend\models\WorkSchedule;
 use \yii\db\ActiveRecord;
 use tuyakhov\jsonapi\ResourceTrait;
 
@@ -12,42 +13,27 @@ use tuyakhov\jsonapi\ResourceTrait;
  * This is the model class for table "time_task".
  *
  * @property integer $id
- * @property string $name
  * @property string $begin
  * @property string $end
- * @property integer $active
  */
 class Task extends ActiveRecord
 {
-    public $workTime;
-    public $workDays;
     use ResourceTrait;
 
-
-    public function fields()
+    public function getWorkScheduleDays()
     {
-        return [
-            'begin',
-            'end',
+        return $workDays = WorkSchedule::find()->select('day')->column();
+    }
+
+    public function getWorkScheduleWorkTime()
+    {
+        $begin = WorkSchedule::find()->select('begin')->column();
+        $end = WorkSchedule::find()->select('end')->column();
+
+        return $workTime = [
+            'begin' => $begin[0],
+            'end' => $end[0]
         ];
-    }
-    public function extraFields()
-    {
-        return ['name', 'id', 'active'];
-    }
-
-
-    public static function getWorkTime()
-    {
-        return [
-            'begin' => 8 * 60 * 60,
-            'end' => 17 * 60 * 60
-        ];
-    }
-
-    public static function getWorkDays()
-    {
-        return [1, 2, 4, 5,];
     }
 
     /**
@@ -64,11 +50,8 @@ class Task extends ActiveRecord
     public function rules()
     {
         return [
-            [['name', 'begin', 'end'], 'required'],
+            [['begin', 'end'], 'required'],
             [['begin', 'end'], 'safe'],
-            [['active'], 'integer'],
-            [['name'], 'string', 'max' => 255],
-            [['name'], 'unique'],
         ];
     }
 
@@ -79,22 +62,20 @@ class Task extends ActiveRecord
     {
         return [
             'id' => 'ID',
-            'name' => 'Name',
             'begin' => 'Begin of task',
             'end' => 'End of task',
-            'active' => 'Active',
         ];
     }
 
     public function getTime()
     {
-        $B = 'Busy';
-        $U = 'Unavailable';
-        $F = 'Free';
+        $B = 2;
+        $U = 0;
+        $F = 1;
         $model = $this;
         $tasks = $this::find()->all();
-        $workDays = $this::getWorkDays();
-        $workTime = $this::getWorkTime();
+        $workDays = $this::getWorkScheduleDays();
+        $workTime = $this::getWorkScheduleWorkTime();
         $from = date('H:i', $workTime['begin']);
         $to = date('H:i', $workTime['end']);
         $beginPeriod = new \DateTime($model->begin);
@@ -109,21 +90,21 @@ class Task extends ActiveRecord
             if(in_array($date->format('w'), $workDays)){
                 $start = $date->format('Y-m-d H:i');
                 $end = $date->format('Y-m-d').' '.$from;
-                $type = $U;
-                $searchPeriod[] = new Helper($start, $end, $type);
+                $periodType = $U;
+                $searchPeriod[] = new Helper($start, $end, $periodType);
                 $start = $date->format('Y-m-d').' '.$from;
                 $end = $date->format('Y-m-d').' '.$to;
-                $type = $F;
-                $searchPeriod[] = (new Helper($start, $end, $type));
+                $periodType = $F;
+                $searchPeriod[] = new Helper($start, $end, $periodType);
                 $start = $date->format('Y-m-d').' '.$to;
                 $end = $date->format('Y-m-d 23:59');
-                $type = $U;
-                $searchPeriod[] = (new Helper($start, $end, $type));
+                $periodType = $U;
+                $searchPeriod[] = new Helper($start, $end, $periodType);
             } else {
                 $start = $date->format('Y-m-d H:i');
                 $end = $date->format('Y-m-d 23:59');
-                $type = $U;
-                $searchPeriod[] = (new Helper($start, $end, $type));
+                $periodType = $U;
+                $searchPeriod[] = new Helper($start, $end, $periodType);
             }
         }
 
@@ -131,8 +112,8 @@ class Task extends ActiveRecord
         foreach ($tasks as $task){
             $start = substr($task['begin'], 0, -3);
             $end = substr($task['end'], 0, -3);
-            $type = $B;
-            $workPeriod[] = new Helper($start, $end, $type);
+            $periodType = $B;
+            $workPeriod[] = new Helper($start, $end, $periodType);
         }
 
         for($i=0, $j=1; $i <count($workPeriod); $i++, $j++){
@@ -156,8 +137,8 @@ class Task extends ActiveRecord
                     && substr($work->end, 0, -6) > $endPeriod->format('Y-m-d')){
                     $start = $work->begin;
                     $end = $searchPeriod[$i]->end;
-                    $type = $work->type;
-                    $searchPeriod[] = new Helper($start, $end, $type);
+                    $periodType = $work->periodType;
+                    $searchPeriod[] = new Helper($start, $end, $periodType);
                     $searchPeriod[$i]->end = $work->begin;
                     break;
                 }elseif (substr($work->begin, 0, -6) < $beginPeriod->format('Y-m-d')
@@ -166,13 +147,13 @@ class Task extends ActiveRecord
                     {
                         $start = $searchPeriod[$i]->begin;
                         $end = $work->end;
-                        $type = $work->type;
-                        $searchPeriod[] = new Helper($start, $end, $type);
+                        $periodType = $work->periodType;
+                        $searchPeriod[] = new Helper($start, $end, $periodType);
                         $searchPeriod[$i]->begin = $work->end;
                         break;
                     }elseif($searchPeriod[$i]->end < $work->end){
                         $searchPeriod[$i]->end = $work->end;
-                        $searchPeriod[$i]->type = $work->type;
+                        $searchPeriod[$i]->type = $work->periodType;
                         $searchPeriod[$j]->begin = $work->end;
                     }
                 }elseif(substr($work->begin, 0, -6) == substr($searchPeriod[$i]->begin, 0, -6))
@@ -188,8 +169,8 @@ class Task extends ActiveRecord
                             $searchPeriod[] = $work;
                             $start = $work->end;
                             $end = $searchPeriod[$i]->end;
-                            $type = $searchPeriod[$i]->type;
-                            $searchPeriod[] = new Helper($start, $end, $type);
+                            $periodType = $searchPeriod[$i]->periodType;
+                            $searchPeriod[] = new Helper($start, $end, $periodType);
                             $searchPeriod[$i]->end = $work->begin;
                             sort($searchPeriod);
                         }
@@ -221,11 +202,6 @@ class Task extends ActiveRecord
         if($task_begin >= $task_end){
             return ['message' => 'Please choose another date'];
         }
-        if (empty($tasks)) {
-            $name = 'task1';
-
-            return ['name' => $name];
-        }
         $temp_begin = '';
         $temp_end = '';
         foreach ($tasks as $key => $value) {
@@ -247,12 +223,10 @@ class Task extends ActiveRecord
         }
         $begin = $temp_begin['date'];
         $end = $temp_end['date'];
-        $name = 'task1';
 
         return [
             'begin' => $begin,
             'end' => $end,
-            'name' => $name
         ];
 
     }

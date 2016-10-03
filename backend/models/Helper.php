@@ -6,12 +6,12 @@ class Helper
 {
     public $begin;
     public $end;
-    public $type;
+    public $periodType;
 
-    public function __construct($begin, $end, $type)
+    public function __construct($begin, $end, $periodType)
     {
         $this->begin = $begin;
         $this->end = $end;
-        $this->type = $type;
+        $this->periodType = $periodType;
     }
 }

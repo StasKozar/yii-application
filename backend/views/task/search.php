@@ -46,15 +46,15 @@ $this->params['breadcrumbs'][] = $this->title;
             foreach($time as $value)
             {
                 if($date->format('Y-m-d') == substr($value->begin, 0, -6)){
-                    if($value->type == 'Unavailable'){
+                    if($value->periodType == 0){
                         echo "<td style='background: grey'>".substr($value->begin, 11)."</td>>";
                         echo "<td style='background: grey'>".substr($value->end, 11)."</td>>";
                     }
-                    if($value->type == 'Free'){
+                    if($value->periodType == 1){
                         echo "<td style='background: greenyellow'>".substr($value->begin, 11)."</td>>";
                         echo "<td style='background: greenyellow'>".substr($value->end, 11)."</td>>";
                     }
-                    if($value->type == 'Busy'){
+                    if($value->periodType == 2){
                         echo "<td style='background: red'>".substr($value->begin, 11)."</td>>";
                         echo "<td style='background: red'>".substr($value->end, 11)."</td>>";
                     }
