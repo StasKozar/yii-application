@@ -14,6 +14,18 @@ return [
     'components' => [
         'request' => [
             'baseUrl'=>'',
+            'parsers' => [
+                'application/vnd.api+json' => 'tuyakhov\jsonapi\JsonApiParser',
+            ],
+        ],
+        'response' => [
+            'formatters' => [
+                \yii\web\Response::FORMAT_JSON => [
+                    'class' => 'tuyakhov\jsonapi\JsonApiResponseFormatter',
+                    'prettyPrint' => YII_DEBUG,
+                    'encodeOptions' => JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
+                ],
+            ],
         ],
         'user' => [
             'identityClass' => 'common\models\User',
@@ -55,6 +67,13 @@ return [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                [
+                    'class' => 'yii\rest\UrlRule',
+                    'controller' => 'tasks',
+                    'extraPatterns' => [
+                        'GET /search' => 'search',
+                    ],
+                ],
             ],
         ],
 
