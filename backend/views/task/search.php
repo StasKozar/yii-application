@@ -45,18 +45,18 @@ $this->params['breadcrumbs'][] = $this->title;
             echo "<td>".$date->format('Y-m-d')."</td>";
             foreach($time as $value)
             {
-                if($date->format('Y-m-d') == substr($value->begin, 0, -6)){
+                if($date->format('Y-m-d') == $value->begin->format('Y-m-d')){
                     if($value->periodType == 0){
-                        echo "<td style='background: grey'>".substr($value->begin, 11)."</td>>";
-                        echo "<td style='background: grey'>".substr($value->end, 11)."</td>>";
+                        echo "<td style='background: grey'>".$value->begin->format('H:i')."</td>>";
+                        echo "<td style='background: grey'>".$value->end->format('H:i')."</td>>";
                     }
                     if($value->periodType == 1){
-                        echo "<td style='background: greenyellow'>".substr($value->begin, 11)."</td>>";
-                        echo "<td style='background: greenyellow'>".substr($value->end, 11)."</td>>";
+                        echo "<td style='background: greenyellow'>".$value->begin->format('H:i')."</td>>";
+                        echo "<td style='background: greenyellow'>".$value->end->format('H:i')."</td>>";
                     }
                     if($value->periodType == 2){
-                        echo "<td style='background: red'>".substr($value->begin, 11)."</td>>";
-                        echo "<td style='background: red'>".substr($value->end, 11)."</td>>";
+                        echo "<td style='background: red'>".$value->begin->format('H:i')."</td>>";
+                        echo "<td style='background: red'>".$value->end->format('H:i')."</td>>";
                     }
                 }
             }

@@ -1,26 +1,19 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: StasKozar
- * Date: 29/09/2016
- * Time: 15:33
- */
 
-namespace backend\controllers;
+namespace frontend\controllers;
 
-use backend\models\ApiTask;
-use Yii;
-use yii\web\Response;
+
+use frontend\models\Task;
 use yii\filters\ContentNegotiator;
 use yii\helpers\ArrayHelper;
-use yii\rest\ActiveController;
 use yii\helpers\Url;
+use yii\rest\ActiveController;
+use yii\web\Response;
 use yii\web\ServerErrorHttpException;
 
 class TasksController extends ActiveController
 {
-
-    public $modelClass = 'backend\models\ApiTask';
+    public $modelClass = 'frontend\models\Task';
     public $serializer = 'tuyakhov\jsonapi\Serializer';
 
 
@@ -47,22 +40,24 @@ class TasksController extends ActiveController
 
     public function actionCreate()
     {
-        $model = new ApiTask();
-        $model->load(Yii::$app->getRequest()->getBodyParams(), '');
+        $model = new Task();
+        $data = json_decode(file_get_contents("php://input"));
+        $model->begin = $data->data->attributes->begin;
+        $model->end = $data->data->attributes->end;
         $model->validateDate();
 
         if($model->message === false)
         {
             if ($model->save()) {
-                $response = Yii::$app->getResponse();
+                $response = \Yii::$app->getResponse();
                 $response->setStatusCode(201);
                 $id = implode(',', array_values($model->getPrimaryKey(true)));
-                $response->getHeaders()->set('Location', Url::toRoute(['view', 'id' => $id], true));
+                return Task::findOne($id);
             } elseif (!$model->hasErrors()) {
                 throw new ServerErrorHttpException('Failed to create the object for unknown reason.');
             }
         }else{
-            $response = Yii::$app->getResponse();
+            $response = \Yii::$app->getResponse();
             $response->statusCode = 400;
             $error = ([
                 'status' => $response->statusCode,
@@ -76,22 +71,25 @@ class TasksController extends ActiveController
 
     public function actionUpdate($id)
     {
-        $model = ApiTask::findOne($id);
-        $model->load(Yii::$app->getRequest()->getBodyParams(), '');
+        $model = Task::findOne($id);
+        $data = json_decode(file_get_contents("php://input"));
+        $model->begin = $data->data->attributes->begin;
+        $model->end = $data->data->attributes->end;
         $model->validateDate();
 
         if($model->message === false)
         {
             if ($model->save()) {
-                $response = Yii::$app->getResponse();
+                $response = \Yii::$app->getResponse();
                 $response->setStatusCode(201);
                 $id = implode(',', array_values($model->getPrimaryKey(true)));
-                $response->getHeaders()->set('Location', Url::toRoute(['view', 'id' => $id], true));
+                return Task::findOne($id);
+                //$response->getHeaders()->set('Location', Url::toRoute(['view', 'id' => $id], true));
             } elseif (!$model->hasErrors()) {
                 throw new ServerErrorHttpException('Failed to create the object for unknown reason.');
             }
         }else{
-            $response = Yii::$app->getResponse();
+            $response = \Yii::$app->getResponse();
             $response->statusCode = 400;
             $error = ([
                 'status' => $response->statusCode,
@@ -106,8 +104,8 @@ class TasksController extends ActiveController
 
     public function prepareDataProvider()
     {
-        $request = Yii::$app->request;
-        $response = Yii::$app->response;
+        $request = \Yii::$app->request;
+        $response = \Yii::$app->response;
         $get = $request->get('filter');
 
         if(isset($get))
@@ -115,26 +113,22 @@ class TasksController extends ActiveController
             $begin = $get['begin'];
             $end = $get['end'];
             if($begin>$end){
-                $response = Yii::$app->getResponse();
+                $response = \Yii::$app->getResponse();
                 $response->statusCode = 400;
                 $error = ([
                     'status' => $response->statusCode,
                     'title' => 'Incorrect period',
                     'Detail' => 'Begin time can\'t be bigger than the time of end',
                 ]);
-                $response->format = Response::FORMAT_JSON;
                 $response->data = $error;
             }else{
-                $model = new ApiTask();
+                $model = new Task();
                 $model->begin = $begin;
                 $model->end = $end;
-                $response->format = Response::FORMAT_JSON;
                 $response->data = $model->getTime();
             }
         }else{
-            $response->format = Response::FORMAT_JSON;
-            $response->data = ApiTask::find()->all();
-            //return ApiTask::find()->all();
+            $response->data = Task::find()->all();
         }
     }
 }

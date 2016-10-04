@@ -1,15 +1,9 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: StasKozar
- * Date: 30/09/2016
- * Time: 17:11
- */
 
-namespace backend\models;
+namespace frontend\models;
 
 
-class ApiTask extends Task
+class Task extends \backend\models\Task
 {
     public function fields()
     {
@@ -30,7 +24,11 @@ class ApiTask extends Task
         foreach ($searchPeriod as $key => $value){
             $searchPeriod[$key] = [
                 'type' => $this->getType(),
-                'attributes' => $value,
+                'attributes' => [
+                    'begin' => $value->begin->format('Y-m-d H:i'),
+                    'end' => $value->end->format('Y-m-d H:i'),
+                    'type' => $value->periodType,
+                    ]
             ];
         }
         return [
@@ -44,7 +42,7 @@ class ApiTask extends Task
         $model = $this;
 
         if(\DateTime::createFromFormat('Y-m-d H:i' ,$model['begin']) === false
-        || \DateTime::createFromFormat('Y-m-d H:i', $model['end']) === false)
+            || \DateTime::createFromFormat('Y-m-d H:i', $model['end']) === false)
         {
             return $model->message = 'Date do not must be a string and format to Y-m-d H:i';
         }
