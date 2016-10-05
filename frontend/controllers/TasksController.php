@@ -14,7 +14,7 @@ use yii\web\ServerErrorHttpException;
 class TasksController extends ActiveController
 {
     public $modelClass = 'frontend\models\Task';
-    public $serializer = 'tuyakhov\jsonapi\Serializer';
+    public $serializer = 'components\jsonapi\Serializer';
 
 
     public function behaviors()
@@ -51,7 +51,8 @@ class TasksController extends ActiveController
             if ($model->save()) {
                 $response = \Yii::$app->getResponse();
                 $response->setStatusCode(201);
-                $response->data = $model->getData();
+                $id = implode(',', array_values($model->getPrimaryKey(true)));
+                return Task::findOne($id);
             } elseif (!$model->hasErrors()) {
                 throw new ServerErrorHttpException('Failed to create the object for unknown reason.');
             }
@@ -81,7 +82,7 @@ class TasksController extends ActiveController
             if ($model->save()) {
                 $response = \Yii::$app->getResponse();
                 $response->setStatusCode(201);
-                $response->data = $model->getData();
+                return $model;
             } elseif (!$model->hasErrors()) {
                 throw new ServerErrorHttpException('Failed to create the object for unknown reason.');
             }

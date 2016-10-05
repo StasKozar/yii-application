@@ -47,7 +47,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'label' => Yii::t('app', 'Image'),
                 'format' => 'html',
                 'value' => function($data){
-                    return Html::img($data['image'],
+                    return Html::img('/uploads/'.str_replace(DS, '/', $data['image']),
                         ['width' => '50px']);
                 },
             ],
