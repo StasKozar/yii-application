@@ -2,9 +2,13 @@
 
 namespace frontend\models;
 
+use tuyakhov\jsonapi\ResourceTrait;
+
 
 class Task extends \backend\models\Task
 {
+    use ResourceTrait;
+
     public function fields()
     {
         return [
@@ -33,6 +37,17 @@ class Task extends \backend\models\Task
         }
         return [
             $searchPeriod,
+        ];
+    }
+
+    public function getData()
+    {
+        return [
+            'type' => $this->getType(),
+            'attributes' => [
+                'begin' => $this->begin,
+                'end' => $this->end,
+            ]
         ];
     }
 

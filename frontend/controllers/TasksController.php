@@ -51,8 +51,7 @@ class TasksController extends ActiveController
             if ($model->save()) {
                 $response = \Yii::$app->getResponse();
                 $response->setStatusCode(201);
-                $id = implode(',', array_values($model->getPrimaryKey(true)));
-                return Task::findOne($id);
+                $response->data = $model->getData();
             } elseif (!$model->hasErrors()) {
                 throw new ServerErrorHttpException('Failed to create the object for unknown reason.');
             }
@@ -82,9 +81,7 @@ class TasksController extends ActiveController
             if ($model->save()) {
                 $response = \Yii::$app->getResponse();
                 $response->setStatusCode(201);
-                $id = implode(',', array_values($model->getPrimaryKey(true)));
-                return Task::findOne($id);
-                //$response->getHeaders()->set('Location', Url::toRoute(['view', 'id' => $id], true));
+                $response->data = $model->getData();
             } elseif (!$model->hasErrors()) {
                 throw new ServerErrorHttpException('Failed to create the object for unknown reason.');
             }
