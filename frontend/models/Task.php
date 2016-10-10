@@ -31,7 +31,7 @@ class Task extends \backend\models\Task
                 'attributes' => [
                     'begin' => $value->begin->format('Y-m-d H:i'),
                     'end' => $value->end->format('Y-m-d H:i'),
-                    'type' => $value->periodType,
+                    'periodType' => $value->periodType,
                     ]
             ];
         }
@@ -44,6 +44,11 @@ class Task extends \backend\models\Task
     {
         $tasks = parent::find()->all();
         $model = $this;
+
+        if(empty($model['begin']) || empty($model['end']))
+        {
+            return $model->message = 'Task must have time of begin and time of end';
+        }
 
         if(\DateTime::createFromFormat('Y-m-d H:i' ,$model['begin']) === false
             || \DateTime::createFromFormat('Y-m-d H:i', $model['end']) === false)

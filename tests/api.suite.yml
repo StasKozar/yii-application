@@ -1,0 +1,14 @@
+class_name: ApiTester
+modules:
+    enabled:
+        - PhpBrowser:
+              url: http://site.local/
+        - REST:
+              url: http://site.local/
+              depends: PhpBrowser
+              part: Json
+        - \Helper\Api
+        - Db:
+              dsn: mysql:host=localhost;dbname=yii2_advanced_tests
+              user: root
+              password:

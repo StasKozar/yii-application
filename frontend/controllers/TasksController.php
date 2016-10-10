@@ -42,8 +42,8 @@ class TasksController extends ActiveController
     {
         $model = new Task();
         $data = json_decode(file_get_contents("php://input"));
-        $model->begin = $data->data->attributes->begin;
-        $model->end = $data->data->attributes->end;
+        $model->begin = isset($data->data->attributes->begin) ? $data->data->attributes->begin : '';
+        $model->end = isset($data->data->attributes->end) ? $data->data->attributes->end : '';
         $model->validateDate();
 
         if($model->message === false)
@@ -106,11 +106,33 @@ class TasksController extends ActiveController
         $response = \Yii::$app->response;
         $get = $request->get('filter');
 
-        if(isset($get))
-        {
+        if(!isset($get['begin']) && !isset($get['end'])){
+            $response->data = Task::find()->all();
+        }elseif (!isset($get['begin']) || !isset($get['end'])) {
+            $response = \Yii::$app->getResponse();
+            $response->statusCode = 400;
+            $error = ([
+                'status' => $response->statusCode,
+                'title' => 'Incorrect period',
+                'Detail' => 'Period must have time of begin and time of end',
+            ]);
+            $response->data = $error;
+        } elseif (\DateTime::createFromFormat('Y-m-d', $get['begin']) === false
+            || \DateTime::createFromFormat('Y-m-d', $get['end']) === false
+        ) {
+            $response = \Yii::$app->getResponse();
+            $response->statusCode = 400;
+            $error = ([
+                'status' => $response->statusCode,
+                'title' => 'Incorrect period',
+                'Detail' => 'Date do not must be a string and format to Y-m-d',
+            ]);
+            $response->data = $error;
+        } elseif (isset($get['begin']) && isset($get['end'])) {
             $begin = $get['begin'];
             $end = $get['end'];
-            if($begin>$end){
+
+            if ($begin > $end) {
                 $response = \Yii::$app->getResponse();
                 $response->statusCode = 400;
                 $error = ([
@@ -119,13 +141,13 @@ class TasksController extends ActiveController
                     'Detail' => 'Begin time can\'t be bigger than the time of end',
                 ]);
                 $response->data = $error;
-            }else{
+            } else {
                 $model = new Task();
                 $model->begin = $begin;
                 $model->end = $end;
                 $response->data = $model->getTime();
             }
-        }else{
+        } else {
             $response->data = Task::find()->all();
         }
     }
