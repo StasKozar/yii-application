@@ -1,49 +1,132 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: StasKozar
- * Date: 29/09/2016
- * Time: 15:33
- */
 
 namespace api\modules\v1\controllers;
 
+
 use api\modules\v1\models\Task;
-use Yii;
-use yii\rest\Controller;
-use yii\rest\ActiveController;
-use yii\data\ActiveDataProvider;
+use yii\filters\ContentNegotiator;
+use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
+use yii\rest\ActiveController;
+use yii\web\Response;
 use yii\web\ServerErrorHttpException;
 
 class TasksController extends ActiveController
 {
     public $modelClass = 'api\modules\v1\models\Task';
+    public $serializer = 'components\jsonapi\Serializer';
+
+
+    public function behaviors()
+    {
+        return ArrayHelper::merge(parent::behaviors(), [
+            'contentNegotiator' => [
+                'class' => ContentNegotiator::className(),
+                'formats' => [
+                    'application/vnd.api+json' => Response::FORMAT_JSON,
+                ],
+            ]
+        ]);
+    }
 
     public function actions()
     {
         $actions = parent::actions();
-
-        // настроить подготовку провайдера данных с помощью метода "prepareDataProvider()"
         $actions['index']['prepareDataProvider'] = [$this, 'prepareDataProvider'];
-
+        unset($actions['create']);
+        unset($actions['update']);
         return $actions;
+    }
+
+    public function actionCreate()
+    {
+        $model = new Task();
+        $data = json_decode(file_get_contents("php://input"));
+        $model->begin = $data->data->attributes->begin;
+        $model->end = $data->data->attributes->end;
+        $model->validateDate();
+
+        if($model->message === false)
+        {
+            if ($model->save()) {
+                $response = \Yii::$app->getResponse();
+                $response->setStatusCode(201);
+                $id = implode(',', array_values($model->getPrimaryKey(true)));
+                return Task::findOne($id);
+            } elseif (!$model->hasErrors()) {
+                throw new ServerErrorHttpException('Failed to create the object for unknown reason.');
+            }
+        }else{
+            $response = \Yii::$app->getResponse();
+            $response->statusCode = 400;
+            $error = ([
+                'status' => $response->statusCode,
+                'title' => 'Incorrect period',
+                'Detail' => $model->message,
+            ]);
+            $response->data = $error;
+        }
+
+    }
+
+    public function actionUpdate($id)
+    {
+        $model = Task::findOne($id);
+        $data = json_decode(file_get_contents("php://input"));
+        $model->begin = $data->data->attributes->begin;
+        $model->end = $data->data->attributes->end;
+        $model->validateDate();
+
+        if($model->message === false)
+        {
+            if ($model->save()) {
+                $response = \Yii::$app->getResponse();
+                $response->setStatusCode(201);
+                return $model;
+            } elseif (!$model->hasErrors()) {
+                throw new ServerErrorHttpException('Failed to create the object for unknown reason.');
+            }
+        }else{
+            $response = \Yii::$app->getResponse();
+            $response->statusCode = 400;
+            $error = ([
+                'status' => $response->statusCode,
+                'title' => 'Incorrect period',
+                'Detail' => $model->message,
+            ]);
+            $response->data = $error;
+        }
+
+
     }
 
     public function prepareDataProvider()
     {
-        // подготовить и вернуть провайдер данных для действия "index"
+        $request = \Yii::$app->request;
+        $response = \Yii::$app->response;
+        $get = $request->get('filter');
 
-        if(isset($_GET['begin']) && isset($_GET['end']))
+        if(isset($get))
         {
-            $begin = $_GET['begin'];
-            $end = $_GET['end'];
-            $model = new Task();
-            $model->begin = $begin;
-            $model->end = $end;
-            return $model->getTime();
+            $begin = $get['begin'];
+            $end = $get['end'];
+            if($begin>$end){
+                $response = \Yii::$app->getResponse();
+                $response->statusCode = 400;
+                $error = ([
+                    'status' => $response->statusCode,
+                    'title' => 'Incorrect period',
+                    'Detail' => 'Begin time can\'t be bigger than the time of end',
+                ]);
+                $response->data = $error;
+            }else{
+                $model = new Task();
+                $model->begin = $begin;
+                $model->end = $end;
+                $response->data = $model->getTime();
+            }
         }else{
-            return Task::find()->all();
+            $response->data = Task::find()->all();
         }
     }
 }

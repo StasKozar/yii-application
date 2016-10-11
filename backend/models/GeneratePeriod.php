@@ -42,8 +42,8 @@ class GeneratePeriod
     {
         $result = [];
         foreach ($tasks as $task) {
-            $start = date_create_from_format('Y-m-d H:i', substr($task['begin'], 0, -3));
-            $end = date_create_from_format('Y-m-d H:i', substr($task['end'], 0, -3));
+            $start = date_create_from_format('Y-m-d H:i:s', $task->begin);
+            $end = date_create_from_format('Y-m-d H:i:s', $task->end);
             $periodType = self::PERIOD_TYPE_BUSY;
             $result[] = new Helper($start, $end, $periodType);
         }
@@ -105,7 +105,8 @@ class GeneratePeriod
                             $searchPeriod[] = $work;
                             $searchPeriod[$j]->begin = $work->end;
                         } elseif ($work->begin > $searchPeriod[$i]->begin
-                            && $searchPeriod[$i]->end > $work->end) {
+                            && $searchPeriod[$i]->end > $work->end
+                        ) {
                             $searchPeriod[] = $work;
                             $start = $work->end;
                             $end = $searchPeriod[$i]->end;

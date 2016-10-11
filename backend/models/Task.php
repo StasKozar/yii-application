@@ -6,7 +6,7 @@ use Yii;
 use backend\models\Helper;
 use backend\models\WorkSchedule;
 use \yii\db\ActiveRecord;
-use tuyakhov\jsonapi\ResourceTrait;
+use components\jsonapi\ResourceTrait;
 
 
 /**

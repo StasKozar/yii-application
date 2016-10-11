@@ -33,3 +33,6 @@ phpunit.phar
 /.vagrant
 
 /uploads
+tests/_output/*
+tests/_output/*
+tests/_output/*

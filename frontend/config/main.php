@@ -15,13 +15,13 @@ return [
         'request' => [
             'baseUrl'=>'',
             'parsers' => [
-                'application/vnd.api+json' => 'tuyakhov\jsonapi\JsonApiParser',
+                'application/vnd.api+json' => 'components\jsonapi\JsonApiParser',
             ],
         ],
         'response' => [
             'formatters' => [
                 \yii\web\Response::FORMAT_JSON => [
-                    'class' => 'tuyakhov\jsonapi\JsonApiResponseFormatter',
+                    'class' => 'components\jsonapi\JsonApiResponseFormatter',
                     'prettyPrint' => YII_DEBUG,
                     'encodeOptions' => JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
                 ],

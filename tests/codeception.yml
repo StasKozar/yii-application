@@ -9,3 +9,10 @@ paths:
 
 settings:
   colors: true
+config:
+    test_entry_url: http://site.local/
+    Db:
+      dsn: 'mysql:host=localhost;dbname=yii2_advanced_tests'
+      user: 'root'
+      password: ''
+      dump: 'codeception/_data/dump.sql'
